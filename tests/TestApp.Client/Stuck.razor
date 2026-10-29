@@ -1,0 +1,6 @@
+<button @onclick="WaitAsync">Wait forever</button>
+
+@code {
+    // A handler that awaits something that never completes and opens no dialog, so idle can only time out.
+    private Task WaitAsync() => new TaskCompletionSource().Task;
+}

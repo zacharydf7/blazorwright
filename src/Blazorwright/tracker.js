@@ -17,7 +17,7 @@
         wasmUpdatesEnded: 0,
         navigating: false,
         lastActivity: performance.now(),
-        failure: null,
+        failures: [],
         decodeErrors: 0,
     };
     const waiters = new Set();
@@ -29,9 +29,11 @@
         }
     }
 
-    function fail(reason) {
-        if (!state.failure) {
-            state.failure = reason;
+    // kind is 'unhandledException', 'disconnected' or 'tracker'; a wait fails only on the kinds it was asked to, plus
+    // 'tracker', which means the counts can no longer be trusted.
+    function fail(kind, message) {
+        if (!state.failures.some(failure => failure.message === message)) {
+            state.failures.push({ kind, message });
         }
         touch();
     }
@@ -267,7 +269,7 @@
                 this.readMessages(bytes);
             } catch {
                 state.decodeErrors++;
-                fail('Could not decode a circuit message, so render batches can no longer be counted.');
+                fail('tracker', 'Could not decode a circuit message, so render batches can no longer be counted.');
             }
         }
 
@@ -302,7 +304,7 @@
             state.serverRootsAttached++;
             state.lastBatchBeforeAttach = state.lastBatchReceived;
         } else if (target === 'JS.Error') {
-            fail('The server reported an unhandled circuit error.');
+            fail('unhandledException', 'The server reported an unhandled circuit error.');
         }
         touch();
     }
@@ -330,7 +332,7 @@
         };
         socket.addEventListener('close', event => {
             if (!event.wasClean) {
-                fail(`The circuit's WebSocket closed with code ${event.code}.`);
+                fail('disconnected', `The circuit's WebSocket closed with code ${event.code}.`);
             }
         });
     }
@@ -392,7 +394,7 @@
         }
         const errorUi = document.getElementById('blazor-error-ui');
         if (errorUi && errorUi.style.display === 'block') {
-            fail('Blazor showed its error UI.');
+            fail('unhandledException', 'Blazor showed its error UI.');
         }
         touch();
     }).observe(document, { subtree: true, childList: true, attributes: true, characterData: true });
@@ -400,7 +402,7 @@
     document.addEventListener('components-reconnect-state-changed', event => {
         const reconnectState = event.detail?.state;
         if (reconnectState === 'failed' || reconnectState === 'rejected') {
-            fail(`The circuit could not reconnect (${reconnectState}).`);
+            fail('disconnected', `The circuit could not reconnect (${reconnectState}).`);
         }
     }, true);
 
@@ -423,7 +425,7 @@
         return pending;
     }
 
-    function snapshot(status, startedAt) {
+    function snapshot(status, startedAt, failure = state.failures[0]) {
         const now = performance.now();
         const busy = busyCalls();
         return {
@@ -437,7 +439,8 @@
             navigating: state.navigating,
             msSinceActivity: now - state.lastActivity,
             elapsedMs: startedAt === undefined ? 0 : now - startedAt,
-            failure: state.failure,
+            failure: failure?.message ?? null,
+            failureKind: failure?.kind ?? null,
             decodeErrors: state.decodeErrors,
             rootUpdates: {
                 serverSent: state.serverUpdatesSent,
@@ -460,24 +463,25 @@
     }
 
     // Resolves once nothing is busy and nothing has changed for quietMs, or on failure or timeout.
-    function waitUntil(isReady, quietMs, timeoutMs) {
+    function waitUntil(isReady, quietMs, timeoutMs, failOn = ['unhandledException', 'disconnected']) {
         const startedAt = performance.now();
         return new Promise(resolve => {
             let timer;
-            const finish = status => {
+            const finish = (status, failure) => {
                 clearTimeout(timer);
                 waiters.delete(check);
-                resolve(snapshot(status, startedAt));
+                resolve(snapshot(status, startedAt, failure));
             };
             const check = () => {
                 clearTimeout(timer);
                 const now = performance.now();
-                if (state.failure) {
-                    return finish('failed');
+                const failure = state.failures.find(f => f.kind === 'tracker' || failOn.includes(f.kind));
+                if (failure) {
+                    return finish('failed', failure);
                 }
                 const timeLeft = timeoutMs - (now - startedAt);
                 if (timeLeft <= 0) {
-                    return finish('timeout');
+                    return finish('timeout', null);
                 }
                 if (!isReady()) {
                     timer = setTimeout(check, timeLeft);
@@ -485,7 +489,7 @@
                 }
                 const quietLeft = quietMs - (now - state.lastActivity);
                 if (quietLeft <= 0) {
-                    return finish('ready');
+                    return finish('ready', null);
                 }
                 timer = setTimeout(check, Math.min(quietLeft, timeLeft));
             };
@@ -494,11 +498,15 @@
         });
     }
 
+    function hasHandlers(element) {
+        return Object.keys(element).some(key => key.startsWith('_blazorEvents_'));
+    }
+
     window.__blazorTest = {
         snapshot: () => snapshot('snapshot'),
-        idle: (quietMs, timeoutMs) => waitUntil(() => !isBusy(), quietMs, timeoutMs),
-        interactive: timeoutMs => waitUntil(() => !state.navigating && pendingRootComponents().length === 0
-            && state.lastBatchReceived === state.lastBatchCompleted, 0, timeoutMs),
-        hasHandlers: element => Object.keys(element).some(key => key.startsWith('_blazorEvents_')),
+        idle: (quietMs, timeoutMs, failOn) => waitUntil(() => !isBusy(), quietMs, timeoutMs, failOn),
+        interactive: (timeoutMs, failOn) => waitUntil(() => !state.navigating && pendingRootComponents().length === 0
+            && state.lastBatchReceived === state.lastBatchCompleted, 0, timeoutMs, failOn),
+        hasHandlers,
     };
 })();

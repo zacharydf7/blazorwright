@@ -1,2 +1,12 @@
 <Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Blazorwright/Blazorwright.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Blazorwright.Tests.Browser/Blazorwright.Tests.Browser.csproj" />
+    <Project Path="tests/Blazorwright.Tests.Unit/Blazorwright.Tests.Unit.csproj" />
+    <Project Path="tests/TestApp/TestApp.csproj" />
+    <Project Path="tests/TestApp.Client/TestApp.Client.csproj" />
+    <Project Path="tests/TestApp.Widgets/TestApp.Widgets.csproj" />
+  </Folder>
 </Solution>

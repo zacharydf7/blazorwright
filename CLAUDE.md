@@ -23,20 +23,21 @@ the app has finished reacting, with no changes to the app under test. It also ch
 hosts the app in-process on real Kestrel, and keeps failure artifacts. Two packages are planned: `Blazorwright` and
 `Blazorwright.Xunit`.
 
-The project is in its feasibility phase. `spike/` holds throwaway code that answers the design spec's feasibility
-questions; package code goes in `src/` and `tests/` once the go/no-go gate passes.
+The feasibility gate passed, and v0.1 is being built in slices. `src/Blazorwright` holds the tracker script (an embedded
+resource) and the Playwright extensions; `tests/TestApp` is the sample app the browser tests drive. `spike/` holds the
+throwaway code that answered the design spec's feasibility questions.
 
 ## Build and test
 
-`Blazorwright.slnx` is empty until package code exists. The spike has its own solution; CI only builds it.
-`SPIKE_RUNS` and `SPIKE_SWEEP_RUNS` set the run counts (default 10); results land in
-`spike/Spike.Tests/bin/Release/net10.0/spike-results/`.
+```
+dotnet build -c Release
+pwsh tests/Blazorwright.Tests.Browser/bin/Release/net10.0/playwright.ps1 install chromium firefox
+dotnet test -c Release
+```
 
-```
-dotnet build spike/Spike.slnx -c Release
-pwsh spike/Spike.Tests/bin/Release/net10.0/playwright.ps1 install chromium firefox
-dotnet test --solution spike/Spike.slnx -c Release
-```
+The spike has its own solution, which reuses `tests/TestApp` and `src/Blazorwright/tracker.js`; CI only builds it.
+`SPIKE_RUNS` and `SPIKE_SWEEP_RUNS` set its run counts (default 10); results land in
+`spike/Spike.Tests/bin/Release/net10.0/spike-results/`.
 
 - Tests run on Microsoft.Testing.Platform (xUnit v3): filter with `--filter-class` and `--filter-method`, not VSTest's
   `--filter`.

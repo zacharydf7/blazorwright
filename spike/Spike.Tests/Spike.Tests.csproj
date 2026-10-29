@@ -14,11 +14,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TestApp\TestApp.csproj" />
+    <ProjectReference Include="..\..\tests\TestApp\TestApp.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\tracker.js" Link="tracker.js" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\src\Blazorwright\tracker.js" Link="tracker.js" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
