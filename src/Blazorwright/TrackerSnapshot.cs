@@ -5,12 +5,7 @@ internal sealed record TrackerSnapshot(string Status, Dictionary<string, int> Do
     int PendingBatches, string[] PendingRootComponents, bool Navigating, double MsSinceActivity, string? Failure,
     string? FailureKind)
 {
-    public CircuitFailure FailureFlag => FailureKind switch
-    {
-        "unhandledException" => CircuitFailure.UnhandledException,
-        "disconnected" => CircuitFailure.Disconnected,
-        _ => CircuitFailure.None,
-    };
+    public CircuitFailure FailureFlag => Tracker.FailureFlag(FailureKind);
 
     public string DescribeBusy() => Join(
         Calls(DotNetCalls, "in flight"),

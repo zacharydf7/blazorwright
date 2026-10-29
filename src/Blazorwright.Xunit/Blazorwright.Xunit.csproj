@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Blazorwright.Tests.Browser" />
+    <InternalsVisibleTo Include="Blazorwright.Tests.Unit" />
   </ItemGroup>
 
 </Project>

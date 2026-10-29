@@ -8,7 +8,6 @@ public static class BlazorPageExtensions
     public static async Task<IResponse?> GotoBlazorAsync(this IPage page, string url, BlazorTestOptions? options = null)
     {
         var response = await page.GotoAsync(url);
-        await page.WaitForBlazorInteractiveAsync(options);
         await page.WaitForBlazorIdleAsync(options);
         return response;
     }

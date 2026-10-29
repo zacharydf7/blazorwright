@@ -26,8 +26,6 @@ public class BlazorAppFixture<TProgram> : WebApplicationFactory<TProgram>, IBlaz
 
     public ServerLog Log { get; } = new();
 
-    ServerLog? IBlazorApp.Log => Log;
-
     /// <summary>Changes the app for tests: settings, services or anything else on the web host builder.</summary>
     protected virtual void ConfigureApp(IWebHostBuilder app)
     {

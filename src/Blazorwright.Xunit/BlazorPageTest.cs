@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.Playwright;
 using Microsoft.Playwright.Xunit.v3;
 using Xunit;
@@ -33,23 +35,35 @@ public class BlazorPageTest(IBlazorApp app) : ContextTest
 
     public override async ValueTask DisposeAsync()
     {
-        // Context is null when setup failed before it opened; the setup error is the one to report.
-        if (Context is not null)
+        try
         {
-            var kept = await _recorder.StopAsync(Context, TestOk() ? null : FailureFolder());
-            foreach (var file in kept)
+            // Context is null when setup failed before it opened; the setup error is the one to report.
+            if (Context is not null)
             {
-                TestContext.Current.TestOutputHelper?.WriteLine($"Kept {file}");
+                var testName = TestContext.Current.Test?.TestDisplayName ?? "test";
+                var keepIn = TestOk() ? null : Path.Combine(AppContext.BaseDirectory, "TestResults", "Blazor", FolderName(testName));
+                foreach (var file in await _recorder.StopAsync(Context, keepIn))
+                {
+                    TestContext.Current.TestOutputHelper?.WriteLine($"Kept {file}");
+                }
             }
         }
-
-        await base.DisposeAsync();
+        finally
+        {
+            await base.DisposeAsync();
+        }
     }
 
-    private static string FailureFolder()
+    // Theory rows differ only at the end of their names, so a shortened name keeps a hash of the whole one.
+    internal static string FolderName(string testName)
     {
-        var name = TestContext.Current.Test?.TestDisplayName ?? "test";
-        var safeName = string.Concat(name.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c));
-        return Path.Combine(AppContext.BaseDirectory, "TestResults", "Blazor", safeName[..Math.Min(safeName.Length, 120)]);
+        var safeName = string.Concat(testName.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c));
+        if (safeName.Length <= 100)
+        {
+            return safeName;
+        }
+
+        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(testName)))[..8];
+        return $"{safeName[..91]}-{hash}";
     }
 }

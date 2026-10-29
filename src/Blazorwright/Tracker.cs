@@ -47,8 +47,20 @@ internal static class Tracker
             .Where(entry => entry.Level >= LogLevel.Warning)
             .Select(entry => entry.ToString())
             .ToList();
-        return lines.Count > 0 ? string.Join(Environment.NewLine, [message, "", "Server log:", .. lines]) : message;
+        var heading = "Server warnings and errors since this test's browser context opened "
+            + "(tests sharing the app add to them too):";
+        return lines.Count > 0 ? string.Join(Environment.NewLine, [message, "", heading, .. lines]) : message;
     }
+
+    public static BlazorCircuitException Failed(IPage page, string waitingFor, string? kind, string? message) =>
+        new(FailureFlag(kind), WithServerLog(page, $"The app failed while waiting for {waitingFor}: {message}"));
+
+    public static CircuitFailure FailureFlag(string? kind) => kind switch
+    {
+        "unhandledException" => CircuitFailure.UnhandledException,
+        "disconnected" => CircuitFailure.Disconnected,
+        _ => CircuitFailure.None,
+    };
 
     public static NotSupportedException NotInstalled() => new("Blazor tracking isn't installed on this page. "
         + "Call AddBlazorTrackingAsync on its browser context before opening the page.");
@@ -61,8 +73,7 @@ internal static class Tracker
         var snapshot = await EvaluateAsync(page, wait, resolved) ?? throw NotInstalled();
         if (snapshot.Status == "failed")
         {
-            throw new BlazorCircuitException(snapshot.FailureFlag,
-                WithServerLog(page, $"The app failed while waiting for it to be {wait}: {snapshot.Failure}"));
+            throw Failed(page, $"it to be {wait}", snapshot.FailureKind, snapshot.Failure);
         }
 
         if (snapshot.Status == "timeout")
@@ -85,14 +96,28 @@ internal static class Tracker
                     new object[] { wait, options.QuietPeriod.TotalMilliseconds, timeLeft, FailureKinds(options.FailOn) });
                 return json is null ? null : JsonSerializer.Deserialize<TrackerSnapshot>(json, JsonSerializerOptions.Web);
             }
-            catch (PlaywrightException exception) when (exception.Message.Contains("Execution context was destroyed") && timeLeft > 0)
+            catch (PlaywrightException exception) when (exception.Message.Contains("Execution context was destroyed"))
             {
-                await page.WaitForLoadStateAsync(LoadState.Load, new() { Timeout = (float)timeLeft });
+                var loadTimeLeft = (options.Timeout - clock.Elapsed).TotalMilliseconds;
+                if (loadTimeLeft <= 0)
+                {
+                    throw new BlazorTimeoutException(
+                        WithServerLog(page, $"Not {wait} after {Seconds(options.Timeout)}: the page was still loading."));
+                }
+
+                try
+                {
+                    await page.WaitForLoadStateAsync(LoadState.Load, new() { Timeout = (float)loadTimeLeft });
+                }
+                catch (TimeoutException)
+                {
+                    // The next wait gets no time left, so it reports what is still busy on the new page.
+                }
             }
         }
     }
 
-    private static List<string> FailureKinds(CircuitFailure failOn)
+    public static List<string> FailureKinds(CircuitFailure failOn)
     {
         var kinds = new List<string>();
         if (failOn.HasFlag(CircuitFailure.UnhandledException))

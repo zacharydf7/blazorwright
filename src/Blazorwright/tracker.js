@@ -1,5 +1,4 @@
-// Spike tracker: watches Blazor's hidden phases from inside the page. Installed as a Playwright init script, so it runs
-// before any page script.
+// Blazorwright tracker: watches Blazor's hidden phases from inside the page, installed as a Playwright init script.
 (() => {
     if (window.__blazorTest) {
         return;
@@ -29,8 +28,7 @@
         }
     }
 
-    // kind is 'unhandledException', 'disconnected' or 'tracker'; a wait fails only on the kinds it was asked to, plus
-    // 'tracker', which means the counts can no longer be trusted.
+    // kind is 'unhandledException', 'disconnected' or 'tracker' (the counts can't be trusted, so every wait fails).
     function fail(kind, message) {
         if (!state.failures.some(failure => failure.message === message)) {
             state.failures.push({ kind, message });
@@ -96,8 +94,7 @@
         prototype.invokeMethodAsync = counted(prototype.invokeMethodAsync, args => args[0]);
         dotNet.invokeMethodAsync = counted(dotNet.invokeMethodAsync, args => `${args[0]}.${args[1]}`);
 
-        // .NET-to-JS calls: each runtime attaches a dispatcher, and beginInvokeJSFromDotNet settles once the JS function
-        // has settled and its result is on its way back to .NET.
+        // .NET-to-JS calls settle once the JS function has settled and its result is on its way back to .NET.
         const attachDispatcher = dotNet.attachDispatcher;
         dotNet.attachDispatcher = function (...args) {
             const dispatcher = attachDispatcher.apply(this, args);
@@ -134,8 +131,7 @@
             touch();
             return end.apply(this, args);
         });
-        // blazor.web.js adds an enhanced navigation's new root components in a microtask after enhancednavigationend,
-        // so the navigation counts until the next task, by which time that update has been sent.
+        // Blazor adds the new page's components in a microtask after the end event, so count until the next task.
         hookOnAssign(blazor, 'addEventListener', addEventListener => {
             addEventListener('enhancednavigationstart', () => {
                 state.navigating = true;
@@ -463,7 +459,11 @@
     }
 
     // Resolves once nothing is busy and nothing has changed for quietMs, or on failure or timeout.
-    function waitUntil(isReady, quietMs, timeoutMs, failOn = ['unhandledException', 'disconnected']) {
+    function firstFailure(failOn = ['unhandledException', 'disconnected']) {
+        return state.failures.find(failure => failure.kind === 'tracker' || failOn.includes(failure.kind)) ?? null;
+    }
+
+    function waitUntil(isReady, quietMs, timeoutMs, failOn) {
         const startedAt = performance.now();
         return new Promise(resolve => {
             let timer;
@@ -475,7 +475,7 @@
             const check = () => {
                 clearTimeout(timer);
                 const now = performance.now();
-                const failure = state.failures.find(f => f.kind === 'tracker' || failOn.includes(f.kind));
+                const failure = firstFailure(failOn);
                 if (failure) {
                     return finish('failed', failure);
                 }
@@ -508,5 +508,6 @@
         interactive: (timeoutMs, failOn) => waitUntil(() => !state.navigating && pendingRootComponents().length === 0
             && state.lastBatchReceived === state.lastBatchCompleted, 0, timeoutMs, failOn),
         hasHandlers,
+        failure: firstFailure,
     };
 })();

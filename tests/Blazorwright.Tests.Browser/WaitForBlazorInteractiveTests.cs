@@ -57,7 +57,39 @@ public class WaitForBlazorInteractiveTests(Browsers browsers, SlowCircuitAppFixt
 
         await button.WaitForBlazorInteractiveAsync();
 
-        Assert.True(await HasHandlersAsync(button));
+        await button.ClickAsync();
+        await page.WaitForBlazorIdleAsync();
+        Assert.Equal("Current count: 1", await page.GetByRole(AriaRole.Status).TextContentAsync());
+        await page.Context.CloseAsync();
+    }
+
+    [Theory]
+    [InlineData("chromium", "server")]
+    [InlineData("firefox", "wasm")]
+    public async Task WaitForBlazorInteractiveAsync_ShouldThrowCircuitException_WhenAppFailsDuringLocatorWait(string browser,
+        string mode)
+    {
+        var page = await browsers.NewTrackedPageAsync(browser, app);
+        await page.GotoBlazorAsync($"/{mode}/throws");
+        await page.GetByRole(AriaRole.Button, new() { Name = "Throw" }).ClickAsync();
+
+        var exception = await Assert.ThrowsAsync<BlazorCircuitException>(
+            () => page.GetByRole(AriaRole.Button, new() { Name = "Never shown" }).WaitForBlazorInteractiveAsync());
+
+        Assert.Equal(CircuitFailure.UnhandledException, exception.Failure);
+        await page.Context.CloseAsync();
+    }
+
+    [Fact]
+    public async Task WaitForBlazorInteractiveAsync_ShouldThrowBlazorTimeout_WhenLocatorNeverMatches()
+    {
+        var page = await browsers.NewTrackedPageAsync("chromium", app, new() { Timeout = TimeSpan.FromSeconds(1) });
+        await page.GotoBlazorAsync("/server/counter");
+
+        var exception = await Assert.ThrowsAsync<BlazorTimeoutException>(
+            () => page.GetByRole(AriaRole.Button, new() { Name = "Never shown" }).WaitForBlazorInteractiveAsync());
+
+        Assert.Contains("was not interactive after 1 s: it was missing or had no Blazor event handlers.", exception.Message);
         await page.Context.CloseAsync();
     }
 

@@ -138,7 +138,7 @@ public class WaitForBlazorIdleTests(Browsers browsers, TestAppFixture app) : ICl
 
         var exception = await Assert.ThrowsAsync<BlazorCircuitException>(() => page.WaitForBlazorIdleAsync());
 
-        Assert.Contains("Server log:", exception.Message);
+        Assert.Contains("Server warnings and errors since this test's browser context opened", exception.Message);
         Assert.Contains("System.InvalidOperationException: The throw button was clicked.", exception.Message);
         await page.Context.CloseAsync();
     }

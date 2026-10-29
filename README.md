@@ -91,8 +91,8 @@ protected override FailureArtifacts Artifacts => FailureArtifacts.Trace | Failur
 
 ## When a wait fails
 
-A wait that runs out of time says what was still running, and adds the warnings and errors the server logged during the
-test:
+A wait that runs out of time says what was still running, and adds the warnings and errors the server logged since the
+test's browser context opened. Tests that share the app and run at the same time add to those lines too.
 
 ```
 Blazorwright.BlazorTimeoutException: Not idle after 10 s: 1 call in flight (DispatchEventAsync), 0 render batches
