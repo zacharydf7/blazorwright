@@ -76,12 +76,13 @@ A dialog is any visible element with `aria-modal="true"`, `role="dialog"` or `ro
 
 ## Options
 
-Override `Options` in a test class, or pass options to a single wait:
+Override `Options` in a test class, or pass options to a single wait. A wait times out after 30 s by default, like
+Playwright's own; raise `Timeout` when the app has handlers that run longer, such as file processing on the server.
 
 ```csharp
 protected override BlazorTestOptions Options => new()
 {
-    Timeout = TimeSpan.FromSeconds(10),
+    Timeout = TimeSpan.FromSeconds(60),
     QuietPeriod = TimeSpan.FromMilliseconds(100),
     FailOn = CircuitFailure.UnhandledException | CircuitFailure.Disconnected,
 };
@@ -95,8 +96,8 @@ A wait that runs out of time says what was still running, and adds the warnings 
 test's browser context opened. Tests that share the app and run at the same time add to those lines too.
 
 ```
-Blazorwright.BlazorTimeoutException: Not idle after 10 s: 1 call in flight (DispatchEventAsync), 0 render batches
-pending, last activity 9950 ms ago.
+Blazorwright.BlazorTimeoutException: Not idle after 60 s: 1 call in flight (DispatchEventAsync), 0 render batches
+pending, last activity 59950 ms ago.
 ```
 
 If the app fails during a wait (an unhandled exception, Blazor's error UI, or a lost circuit), the wait stops at once

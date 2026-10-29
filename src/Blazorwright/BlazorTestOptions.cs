@@ -5,8 +5,12 @@ public sealed record BlazorTestOptions
 {
     public static BlazorTestOptions Default { get; } = new();
 
-    /// <summary>How long a wait may take before it throws <see cref="BlazorTimeoutException"/>.</summary>
-    public TimeSpan Timeout { get; init; } = TimeSpan.FromSeconds(15);
+    /// <summary>
+    /// How long a wait may take before it throws <see cref="BlazorTimeoutException"/>. Defaults to 30 s, the same as
+    /// Playwright's default, but it doesn't follow <c>SetDefaultTimeout</c>. Raise it when the app has handlers that run
+    /// longer, such as file processing on the server.
+    /// </summary>
+    public TimeSpan Timeout { get; init; } = TimeSpan.FromSeconds(30);
 
     /// <summary>How long nothing may change before the app counts as idle. It covers work no handler awaits.</summary>
     public TimeSpan QuietPeriod { get; init; } = TimeSpan.FromMilliseconds(100);
