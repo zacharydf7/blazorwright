@@ -12,7 +12,7 @@ namespace Blazorwright;
 /// Runs the app in-process on real Kestrel, on a port the OS picks, and keeps its log lines in <see cref="Log"/>. The
 /// server starts the first time <see cref="BaseUrl"/> is read.
 /// </summary>
-public class BlazorAppFixture<TProgram> : WebApplicationFactory<TProgram> where TProgram : class
+public class BlazorAppFixture<TProgram> : WebApplicationFactory<TProgram>, IBlazorApp where TProgram : class
 {
     private readonly Lazy<string> _baseUrl;
 
@@ -25,6 +25,8 @@ public class BlazorAppFixture<TProgram> : WebApplicationFactory<TProgram> where 
     public string BaseUrl => _baseUrl.Value;
 
     public ServerLog Log { get; } = new();
+
+    ServerLog? IBlazorApp.Log => Log;
 
     /// <summary>Changes the app for tests: settings, services or anything else on the web host builder.</summary>
     protected virtual void ConfigureApp(IWebHostBuilder app)

@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Blazorwright/Blazorwright.csproj" />
+    <Project Path="src/Blazorwright.Xunit/Blazorwright.Xunit.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Blazorwright.Tests.Browser/Blazorwright.Tests.Browser.csproj" />

@@ -15,18 +15,18 @@ public class Browsers : IAsyncLifetime
 
     public async Task<IPage> NewTrackedPageAsync(string browserName, TestAppFixture app, BlazorTestOptions? options = null)
     {
-        var context = await NewContextAsync(browserName, app.BaseUrl);
+        var context = await NewContextAsync(browserName, new() { BaseURL = app.BaseUrl });
         await context.AddBlazorTrackingAsync(options, app.Log);
         return await context.NewPageAsync();
     }
 
     public async Task<IPage> NewUntrackedPageAsync(string browserName, TestAppFixture app)
     {
-        var context = await NewContextAsync(browserName, app.BaseUrl);
+        var context = await NewContextAsync(browserName, new() { BaseURL = app.BaseUrl });
         return await context.NewPageAsync();
     }
 
-    private async Task<IBrowserContext> NewContextAsync(string browserName, string baseUrl)
+    public async Task<IBrowserContext> NewContextAsync(string browserName, BrowserNewContextOptions options)
     {
         Task<IBrowser> browser;
         lock (_lock)
@@ -38,7 +38,7 @@ public class Browsers : IAsyncLifetime
             }
         }
 
-        return await (await browser).NewContextAsync(new() { BaseURL = baseUrl });
+        return await (await browser).NewContextAsync(options);
     }
 
     public async ValueTask DisposeAsync()

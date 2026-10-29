@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Blazorwright\Blazorwright.csproj" />
+    <ProjectReference Include="..\..\src\Blazorwright.Xunit\Blazorwright.Xunit.csproj" />
     <ProjectReference Include="..\TestApp\TestApp.csproj" />
   </ItemGroup>
 
