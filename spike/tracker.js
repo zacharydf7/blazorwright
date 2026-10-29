@@ -15,6 +15,7 @@
         lastBatchBeforeAttach: null,
         wasmUpdatesSent: 0,
         wasmUpdatesEnded: 0,
+        navigating: false,
         lastActivity: performance.now(),
         failure: null,
         decodeErrors: 0,
@@ -121,6 +122,19 @@
             state.wasmUpdatesEnded++;
             touch();
             return end.apply(this, args);
+        });
+        // blazor.web.js adds an enhanced navigation's new root components in a microtask after enhancednavigationend,
+        // so the navigation counts until the next task, by which time that update has been sent.
+        hookOnAssign(blazor, 'addEventListener', addEventListener => {
+            addEventListener('enhancednavigationstart', () => {
+                state.navigating = true;
+                touch();
+            });
+            addEventListener('enhancednavigationend', () => setTimeout(() => {
+                state.navigating = false;
+                touch();
+            }));
+            return addEventListener;
         });
         return blazor;
     });
@@ -411,6 +425,7 @@
             lastBatchReceived: state.lastBatchReceived,
             lastBatchCompleted: state.lastBatchCompleted,
             pendingRootComponents: pendingRootComponents(),
+            navigating: state.navigating,
             msSinceActivity: now - state.lastActivity,
             elapsedMs: startedAt === undefined ? 0 : now - startedAt,
             failure: state.failure,
@@ -431,7 +446,8 @@
     function isBusy() {
         return busyCalls().length > 0
             || state.lastBatchReceived > state.lastBatchCompleted
-            || pendingRootComponents().length > 0;
+            || pendingRootComponents().length > 0
+            || state.navigating;
     }
 
     // Resolves once nothing is busy and nothing has changed for quietMs, or on failure or timeout.
@@ -472,7 +488,7 @@
     window.__blazorTest = {
         snapshot: () => snapshot('snapshot'),
         idle: (quietMs, timeoutMs) => waitUntil(() => !isBusy(), quietMs, timeoutMs),
-        interactive: timeoutMs => waitUntil(() => pendingRootComponents().length === 0
+        interactive: timeoutMs => waitUntil(() => !state.navigating && pendingRootComponents().length === 0
             && state.lastBatchReceived === state.lastBatchCompleted, 0, timeoutMs),
         hasHandlers: element => Object.keys(element).some(key => key.startsWith('_blazorEvents_')),
     };
