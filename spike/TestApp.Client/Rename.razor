@@ -1,0 +1,30 @@
+<button @onclick="RenameAsync">Rename</button>
+<p role="status">@_status</p>
+@if (_dialog is not null)
+{
+    <div role="dialog" aria-label="Rename">
+        <input aria-label="Name" @bind="_name" />
+        <button @onclick="() => Close(_name)">Save</button>
+        <button @onclick="() => Close(null)">Cancel</button>
+    </div>
+}
+
+@code {
+    private TaskCompletionSource<string?>? _dialog;
+    private string _name = "";
+    private string _status = "Idle";
+
+    // Awaits the dialog's result inside the click handler, the way dialog services are documented, then saves.
+    private async Task RenameAsync()
+    {
+        _dialog = new TaskCompletionSource<string?>();
+        var name = await _dialog.Task;
+        _dialog = null;
+        _status = "Saving";
+        StateHasChanged();
+        await Task.Delay(300);
+        _status = name is null ? "Cancelled" : $"Saved {name}";
+    }
+
+    private void Close(string? name) => _dialog?.TrySetResult(name);
+}

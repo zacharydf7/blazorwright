@@ -6,7 +6,7 @@
     }
 
     const state = {
-        dotNetCalls: new Map(),
+        dotNetCalls: new Set(),
         lastBatchReceived: 0,
         lastBatchCompleted: 0,
         serverUpdatesSent: 0,
@@ -37,33 +37,53 @@
 
     // .NET call hook: every DOM event and [JSInvokable] call goes through invokeMethodAsync.
 
+    const modalSelector = '[aria-modal="true"], [role="dialog"], [role="alertdialog"], dialog:modal';
+
+    function openModals() {
+        return [...document.querySelectorAll(modalSelector)].filter(element => element.checkVisibility());
+    }
+
     function beginCall(name) {
-        state.dotNetCalls.set(name, (state.dotNetCalls.get(name) ?? 0) + 1);
+        const call = { name, modalsAtStart: new Set(openModals()) };
+        state.dotNetCalls.add(call);
+        touch();
+        return call;
+    }
+
+    function endCall(call) {
+        state.dotNetCalls.delete(call);
         touch();
     }
 
-    function endCall(name) {
-        const count = state.dotNetCalls.get(name) - 1;
-        if (count === 0) {
-            state.dotNetCalls.delete(name);
-        } else {
-            state.dotNetCalls.set(name, count);
+    // A call that opened a dialog is waiting for the user, not the app, so it doesn't count while that dialog is open.
+    function isParked(call, modals) {
+        return modals.some(modal => !call.modalsAtStart.has(modal));
+    }
+
+    function busyCalls() {
+        const modals = openModals();
+        return [...state.dotNetCalls].filter(call => !isParked(call, modals));
+    }
+
+    function countByName(calls) {
+        const counts = {};
+        for (const call of calls) {
+            counts[call.name] = (counts[call.name] ?? 0) + 1;
         }
-        touch();
+        return counts;
     }
 
     function counted(invoke, nameOf) {
         return function (...args) {
-            const name = nameOf(args);
-            beginCall(name);
+            const call = beginCall(nameOf(args));
             let promise;
             try {
                 promise = invoke.apply(this, args);
             } catch (error) {
-                endCall(name);
+                endCall(call);
                 throw error;
             }
-            promise.then(() => endCall(name), () => endCall(name));
+            promise.then(() => endCall(call), () => endCall(call));
             return promise;
         };
     }
@@ -382,9 +402,11 @@
 
     function snapshot(status, startedAt) {
         const now = performance.now();
+        const busy = busyCalls();
         return {
             status,
-            dotNetCalls: Object.fromEntries(state.dotNetCalls),
+            dotNetCalls: countByName(busy),
+            parkedCalls: countByName([...state.dotNetCalls].filter(call => !busy.includes(call))),
             pendingBatches: Math.max(0, state.lastBatchReceived - state.lastBatchCompleted),
             lastBatchReceived: state.lastBatchReceived,
             lastBatchCompleted: state.lastBatchCompleted,
@@ -407,7 +429,7 @@
     }
 
     function isBusy() {
-        return state.dotNetCalls.size > 0
+        return busyCalls().length > 0
             || state.lastBatchReceived > state.lastBatchCompleted
             || pendingRootComponents().length > 0;
     }

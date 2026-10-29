@@ -3,15 +3,16 @@ using Microsoft.Playwright;
 
 namespace Spike.Tests;
 
-public record TrackerSnapshot(string Status, Dictionary<string, int> DotNetCalls, int PendingBatches, int LastBatchReceived,
-    int LastBatchCompleted, string[] PendingRootComponents, double MsSinceActivity, double ElapsedMs, string? Failure,
-    int DecodeErrors, Dictionary<string, int> RootUpdates, string[] MarkerTypes)
+public record TrackerSnapshot(string Status, Dictionary<string, int> DotNetCalls, Dictionary<string, int> ParkedCalls,
+    int PendingBatches, int LastBatchReceived, int LastBatchCompleted, string[] PendingRootComponents, double MsSinceActivity,
+    double ElapsedMs, string? Failure, int DecodeErrors, Dictionary<string, int> RootUpdates, string[] MarkerTypes)
 {
     // blazor.server.js attaches roots without ever sending UpdateRootComponents.
     public bool UsedServerScript => RootUpdates["serverSent"] == 0 && RootUpdates["serverAttached"] > 0;
 
     public override string ToString() =>
         $"{Status} after {ElapsedMs:F0} ms: calls [{string.Join(", ", DotNetCalls.Select(call => $"{call.Key} x{call.Value}"))}], "
+        + $"parked [{string.Join(", ", ParkedCalls.Select(call => $"{call.Key} x{call.Value}"))}], "
         + $"batches {LastBatchCompleted}/{LastBatchReceived}, pending roots [{string.Join(", ", PendingRootComponents)}], "
         + $"quiet {MsSinceActivity:F0} ms, failure {Failure ?? "none"}, decode errors {DecodeErrors}, "
         + $"root updates [{string.Join(", ", RootUpdates.Select(update => $"{update.Key} {update.Value}"))}], "
