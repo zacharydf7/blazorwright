@@ -1,0 +1,19 @@
+@inject IJSRuntime JS
+
+<button @onclick="Open">Show tip</button>
+<p role="status">@_status</p>
+
+@code {
+    private string _status = "Hidden";
+
+    // Fire-and-forget, like a popover that waits for its open animation before it measures itself.
+    private void Open() => _ = Task.Run(async () =>
+    {
+        var width = await JS.InvokeAsync<int>("spikeInterop.measureAfter", 200);
+        await InvokeAsync(() =>
+        {
+            _status = $"Width {width}";
+            StateHasChanged();
+        });
+    });
+}

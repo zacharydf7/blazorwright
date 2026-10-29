@@ -93,6 +93,15 @@
         const prototype = dotNet.DotNetObject.prototype;
         prototype.invokeMethodAsync = counted(prototype.invokeMethodAsync, args => args[0]);
         dotNet.invokeMethodAsync = counted(dotNet.invokeMethodAsync, args => `${args[0]}.${args[1]}`);
+
+        // .NET-to-JS calls: each runtime attaches a dispatcher, and beginInvokeJSFromDotNet settles once the JS function
+        // has settled and its result is on its way back to .NET.
+        const attachDispatcher = dotNet.attachDispatcher;
+        dotNet.attachDispatcher = function (...args) {
+            const dispatcher = attachDispatcher.apply(this, args);
+            dispatcher.beginInvokeJSFromDotNet = counted(dispatcher.beginInvokeJSFromDotNet, args => `JS ${args[1]}`);
+            return dispatcher;
+        };
     }
 
     function hookOnAssign(target, name, onAssign) {
