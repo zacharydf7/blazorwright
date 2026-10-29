@@ -125,6 +125,8 @@ await context.AddBlazorTrackingAsync(options, app.Log);
 - **A JavaScript call that never settles** keeps idle busy until it times out, and the message names the call.
 - **A non-modal popover with `role="dialog"`** stops its handler from counting while it is open, like a dialog does.
 - **Blazor Server needs WebSockets**, the default transport.
+- **Checks for passing states.** After a wait, a short-lived state such as a loading message may already be gone, so a
+  test that expects to see it can time out. Check the state the app ends in instead.
 
 ## Support
 
