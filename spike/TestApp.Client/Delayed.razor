@@ -1,0 +1,13 @@
+<button @onclick="LoadAsync">Load</button>
+<p role="status">@_status</p>
+
+@code {
+    private string _status = "Idle";
+
+    private async Task LoadAsync()
+    {
+        _status = "Loading";
+        await Task.Delay(800);
+        _status = "Loaded";
+    }
+}

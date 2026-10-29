@@ -1,0 +1,24 @@
+<button @onclick="Open">Choose a fruit</button>
+@if (_items is not null)
+{
+    <ul role="listbox">
+        @foreach (var item in _items)
+        {
+            <li role="option">@item</li>
+        }
+    </ul>
+}
+
+@code {
+    private string[]? _items;
+
+    // Fire-and-forget, like a popover that waits for its open animation before it fills.
+    private void Open() => _ = LoadItemsAsync();
+
+    private async Task LoadItemsAsync()
+    {
+        await Task.Delay(50);
+        _items = ["Apple", "Banana", "Cherry"];
+        await InvokeAsync(StateHasChanged);
+    }
+}

@@ -1,0 +1,17 @@
+<button @onclick="Flip">Toggle</button>
+<p role="status">@(_on ? "On" : "Off")</p>
+
+@code {
+    private bool _on;
+
+    // Fire-and-forget, like a switch that applies its value after a short background hop.
+    private void Flip() => _ = Task.Run(async () =>
+    {
+        await Task.Delay(10);
+        await InvokeAsync(() =>
+        {
+            _on = !_on;
+            StateHasChanged();
+        });
+    });
+}

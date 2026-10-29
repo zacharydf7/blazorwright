@@ -1,0 +1,48 @@
+@inject Ticker Ticker
+
+<button @onclick="RunAsync">Run</button>
+<button @onclick="BurstAsync">Burst</button>
+<p role="status">@_status</p>
+<ul>
+    @foreach (var row in _rows)
+    {
+        <li>@row</li>
+    }
+</ul>
+
+@code {
+    private string _status = "Ready";
+    private List<string> _rows = [];
+
+    // Five renders from a timer, then one from a hosted service, all awaited by the handler.
+    private async Task RunAsync()
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(300));
+        for (var step = 1; step <= 5; step++)
+        {
+            await timer.WaitForNextTickAsync();
+            _status = $"Step {step}";
+            StateHasChanged();
+        }
+
+        await Ticker.RunOnServiceAsync(() => InvokeAsync(() =>
+        {
+            _status = "Done by service";
+            StateHasChanged();
+        }));
+    }
+
+    // More large renders in a row than the server sends before the browser acknowledges them.
+    private async Task BurstAsync()
+    {
+        for (var render = 1; render <= 30; render++)
+        {
+            _rows = Enumerable.Range(1, 2000).Select(row => $"Render {render} row {row}").ToList();
+            _status = $"Burst {render}";
+            StateHasChanged();
+            await Task.Yield();
+        }
+
+        _status = "Burst done";
+    }
+}

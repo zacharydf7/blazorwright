@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <base href="/" />
+    <link rel="stylesheet" href="@Assets["_content/TestApp.Widgets/widgets.css"]" />
+    <HeadOutlet />
+</head>
+<body>
+    <Routes />
+    <div id="blazor-error-ui" style="display: none">An error has occurred. <a href="" class="reload">Reload</a></div>
+    <script src="@Assets[ScriptPath]"></script>
+</body>
+</html>
+
+@code {
+    [CascadingParameter] private HttpContext HttpContext { get; set; } = null!;
+
+    // Pages under /serverjs use the older Blazor Server script, which many existing Server apps still load.
+    private string ScriptPath => HttpContext.Request.Path.StartsWithSegments("/serverjs")
+        ? "_framework/blazor.server.js"
+        : "_framework/blazor.web.js";
+}

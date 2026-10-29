@@ -28,16 +28,20 @@ questions; package code goes in `src/` and `tests/` once the go/no-go gate passe
 
 ## Build and test
 
+`Blazorwright.slnx` is empty until package code exists. The spike has its own solution; CI only builds it.
+`SPIKE_RUNS` and `SPIKE_SWEEP_RUNS` set the run counts (default 10); results land in
+`spike/Spike.Tests/bin/Release/net10.0/spike-results/`.
+
 ```
-dotnet build
-dotnet test -c Release
+dotnet build spike/Spike.slnx -c Release
 pwsh spike/Spike.Tests/bin/Release/net10.0/playwright.ps1 install chromium firefox
+dotnet test --solution spike/Spike.slnx -c Release
 ```
 
 - Tests run on Microsoft.Testing.Platform (xUnit v3): filter with `--filter-class` and `--filter-method`, not VSTest's
   `--filter`.
 - Warnings are errors.
-- CI tests every push and pull request on Windows and Linux. Pushing a `v*` tag publishes the packages to nuget.org;
+- CI builds every push and pull request on Windows and Linux. Pushing a `v*` tag publishes the packages to nuget.org;
   only the maintainer creates tags.
 
 ## Tests

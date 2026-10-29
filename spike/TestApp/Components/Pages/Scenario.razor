@@ -1,0 +1,36 @@
+@page "/{Mode}/{Name}"
+
+@switch (Name)
+{
+    case "delayed":
+        <Delayed @rendermode="RenderModeFor(Mode)" />
+        break;
+    case "counter":
+        <Counter @rendermode="RenderModeFor(Mode)" />
+        break;
+    case "throws":
+        <Throws @rendermode="RenderModeFor(Mode)" />
+        break;
+    case "dropdown":
+        <Dropdown @rendermode="RenderModeFor(Mode)" />
+        break;
+    case "toggle":
+        <Toggle @rendermode="RenderModeFor(Mode)" />
+        break;
+    case "updates":
+        <Updates @rendermode="RenderModeFor(Mode)" />
+        break;
+}
+
+@code {
+    [Parameter] public string Mode { get; set; } = "";
+    [Parameter] public string Name { get; set; } = "";
+
+    private static IComponentRenderMode RenderModeFor(string mode) => mode switch
+    {
+        "server" or "serverjs" => InteractiveServer,
+        "wasm" => InteractiveWebAssembly,
+        "auto" => InteractiveAuto,
+        _ => throw new ArgumentException($"Unknown render mode '{mode}'.", nameof(mode)),
+    };
+}

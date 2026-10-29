@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Spike.Tests/Spike.Tests.csproj" />
+  <Project Path="TestApp/TestApp.csproj" />
+  <Project Path="TestApp.Client/TestApp.Client.csproj" />
+  <Project Path="TestApp.Widgets/TestApp.Widgets.csproj" />
+</Solution>

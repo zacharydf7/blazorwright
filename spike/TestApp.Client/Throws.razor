@@ -1,0 +1,5 @@
+<button @onclick="Throw">Throw</button>
+
+@code {
+    private void Throw() => throw new InvalidOperationException("The throw button was clicked.");
+}
