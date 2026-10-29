@@ -20,12 +20,13 @@ ever enters this repo:
 
 Blazorwright makes Playwright tests of Blazor apps deterministic: `await Page.WaitForBlazorIdleAsync()` tells a test
 the app has finished reacting, with no changes to the app under test. It also checks interactivity after prerender,
-hosts the app in-process on real Kestrel, and keeps failure artifacts. Two packages are planned: `Blazorwright` and
-`Blazorwright.Xunit`.
+hosts the app in-process on real Kestrel, and keeps failure artifacts.
 
-The feasibility gate passed, and v0.1 is being built in slices. `src/Blazorwright` holds the tracker script (an embedded
-resource) and the Playwright extensions; `tests/TestApp` is the sample app the browser tests drive. `spike/` holds the
-throwaway code that answered the design spec's feasibility questions.
+- `src/Blazorwright`: the tracker script (an embedded resource), the `IPage`, `ILocator` and `IBrowserContext`
+  extensions, and `BlazorAppFixture` hosting.
+- `src/Blazorwright.Xunit`: `BlazorPageTest`, the xUnit v3 base class that keeps a trace and video for failed tests.
+- `tests/Blazorwright.Tests.Browser`: contract tests that drive `tests/TestApp` on Chromium and Firefox.
+- `spike/`: throwaway code that answered the design spec's feasibility questions.
 
 ## Build and test
 
