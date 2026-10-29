@@ -83,11 +83,12 @@ public class WaitForBlazorInteractiveTests(Browsers browsers, SlowCircuitAppFixt
     [Fact]
     public async Task WaitForBlazorInteractiveAsync_ShouldThrowBlazorTimeout_WhenLocatorNeverMatches()
     {
-        var page = await browsers.NewTrackedPageAsync("chromium", app, new() { Timeout = TimeSpan.FromSeconds(1) });
+        var page = await browsers.NewTrackedPageAsync("chromium", app);
         await page.GotoBlazorAsync("/server/counter");
 
-        var exception = await Assert.ThrowsAsync<BlazorTimeoutException>(
-            () => page.GetByRole(AriaRole.Button, new() { Name = "Never shown" }).WaitForBlazorInteractiveAsync());
+        var exception = await Assert.ThrowsAsync<BlazorTimeoutException>(() => page
+            .GetByRole(AriaRole.Button, new() { Name = "Never shown" })
+            .WaitForBlazorInteractiveAsync(new() { Timeout = TimeSpan.FromSeconds(1) }));
 
         Assert.Contains("was not interactive after 1 s: it was missing or had no Blazor event handlers.", exception.Message);
         await page.Context.CloseAsync();

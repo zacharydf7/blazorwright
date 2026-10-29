@@ -100,11 +100,12 @@ public class WaitForBlazorIdleTests(Browsers browsers, TestAppFixture app) : ICl
     [InlineData("firefox", "wasm")]
     public async Task WaitForBlazorIdleAsync_ShouldThrowNamingTheCall_WhenHandlerNeverFinishes(string browser, string mode)
     {
-        var page = await browsers.NewTrackedPageAsync(browser, app, new() { Timeout = TimeSpan.FromSeconds(1) });
+        var page = await browsers.NewTrackedPageAsync(browser, app);
         await page.GotoBlazorAsync($"/{mode}/stuck");
         await page.GetByRole(AriaRole.Button, new() { Name = "Wait forever" }).ClickAsync();
 
-        var exception = await Assert.ThrowsAsync<BlazorTimeoutException>(() => page.WaitForBlazorIdleAsync());
+        var exception = await Assert.ThrowsAsync<BlazorTimeoutException>(
+            () => page.WaitForBlazorIdleAsync(new() { Timeout = TimeSpan.FromSeconds(1) }));
 
         Assert.StartsWith("Not idle after 1 s: 1 call in flight (DispatchEventAsync), 0 render batches pending", exception.Message);
         await page.Context.CloseAsync();
