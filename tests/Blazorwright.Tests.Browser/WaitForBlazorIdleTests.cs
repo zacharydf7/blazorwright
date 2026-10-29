@@ -13,7 +13,7 @@ public class WaitForBlazorIdleTests(Browsers browsers, TestAppFixture app) : ICl
     [InlineData("firefox", "wasm")]
     public async Task WaitForBlazorIdleAsync_ShouldReturnAfterAwaitedWork_WhenHandlerAwaitsDelay(string browser, string mode)
     {
-        var page = await browsers.NewTrackedPageAsync(browser, app.BaseUrl);
+        var page = await browsers.NewTrackedPageAsync(browser, app);
         await page.GotoBlazorAsync($"/{mode}/delayed");
 
         await page.GetByRole(AriaRole.Button, new() { Name = "Load" }).ClickAsync();
@@ -31,7 +31,7 @@ public class WaitForBlazorIdleTests(Browsers browsers, TestAppFixture app) : ICl
     public async Task WaitForBlazorIdleAsync_ShouldReturnAfterLastRender_WhenServerRendersRepeatedly(string browser, string mode,
         string button, string finalStatus)
     {
-        var page = await browsers.NewTrackedPageAsync(browser, app.BaseUrl);
+        var page = await browsers.NewTrackedPageAsync(browser, app);
         await page.GotoBlazorAsync($"/{mode}/updates");
 
         await page.GetByRole(AriaRole.Button, new() { Name = button }).ClickAsync();
@@ -48,7 +48,7 @@ public class WaitForBlazorIdleTests(Browsers browsers, TestAppFixture app) : ICl
     [InlineData("firefox", "wasm")]
     public async Task WaitForBlazorIdleAsync_ShouldReturnWhileDialogIsOpen_WhenHandlerAwaitsDialogResult(string browser, string mode)
     {
-        var page = await browsers.NewTrackedPageAsync(browser, app.BaseUrl);
+        var page = await browsers.NewTrackedPageAsync(browser, app);
         await page.GotoBlazorAsync($"/{mode}/rename");
         await page.GetByRole(AriaRole.Button, new() { Name = "Rename" }).ClickAsync();
         await page.WaitForBlazorIdleAsync();
@@ -68,7 +68,7 @@ public class WaitForBlazorIdleTests(Browsers browsers, TestAppFixture app) : ICl
     [InlineData("firefox", "wasm")]
     public async Task WaitForBlazorIdleAsync_ShouldWaitForJSCall_WhenFireAndForgetWorkAwaitsIt(string browser, string mode)
     {
-        var page = await browsers.NewTrackedPageAsync(browser, app.BaseUrl);
+        var page = await browsers.NewTrackedPageAsync(browser, app);
         await page.GotoBlazorAsync($"/{mode}/measure");
 
         await page.GetByRole(AriaRole.Button, new() { Name = "Show tip" }).ClickAsync();
@@ -83,7 +83,7 @@ public class WaitForBlazorIdleTests(Browsers browsers, TestAppFixture app) : ICl
     [InlineData("firefox", "wasm")]
     public async Task WaitForBlazorIdleAsync_ShouldStartAgainOnNewPage_WhenPageReloadsDuringWait(string browser, string mode)
     {
-        var page = await browsers.NewTrackedPageAsync(browser, app.BaseUrl);
+        var page = await browsers.NewTrackedPageAsync(browser, app);
         await page.GotoBlazorAsync($"/{mode}/delayed");
         await page.GetByRole(AriaRole.Button, new() { Name = "Load" }).ClickAsync();
         var idle = page.WaitForBlazorIdleAsync();
@@ -100,7 +100,7 @@ public class WaitForBlazorIdleTests(Browsers browsers, TestAppFixture app) : ICl
     [InlineData("firefox", "wasm")]
     public async Task WaitForBlazorIdleAsync_ShouldThrowNamingTheCall_WhenHandlerNeverFinishes(string browser, string mode)
     {
-        var page = await browsers.NewTrackedPageAsync(browser, app.BaseUrl, new() { Timeout = TimeSpan.FromSeconds(1) });
+        var page = await browsers.NewTrackedPageAsync(browser, app, new() { Timeout = TimeSpan.FromSeconds(1) });
         await page.GotoBlazorAsync($"/{mode}/stuck");
         await page.GetByRole(AriaRole.Button, new() { Name = "Wait forever" }).ClickAsync();
 
@@ -117,7 +117,7 @@ public class WaitForBlazorIdleTests(Browsers browsers, TestAppFixture app) : ICl
     [InlineData("firefox", "wasm")]
     public async Task WaitForBlazorIdleAsync_ShouldThrowCircuitException_WhenHandlerThrows(string browser, string mode)
     {
-        var page = await browsers.NewTrackedPageAsync(browser, app.BaseUrl);
+        var page = await browsers.NewTrackedPageAsync(browser, app);
         await page.GotoBlazorAsync($"/{mode}/throws");
         await page.GetByRole(AriaRole.Button, new() { Name = "Throw" }).ClickAsync();
 
@@ -127,10 +127,26 @@ public class WaitForBlazorIdleTests(Browsers browsers, TestAppFixture app) : ICl
         await page.Context.CloseAsync();
     }
 
+    [Theory]
+    [InlineData("chromium")]
+    [InlineData("firefox")]
+    public async Task WaitForBlazorIdleAsync_ShouldIncludeServerException_WhenServerHandlerThrows(string browser)
+    {
+        var page = await browsers.NewTrackedPageAsync(browser, app);
+        await page.GotoBlazorAsync("/server/throws");
+        await page.GetByRole(AriaRole.Button, new() { Name = "Throw" }).ClickAsync();
+
+        var exception = await Assert.ThrowsAsync<BlazorCircuitException>(() => page.WaitForBlazorIdleAsync());
+
+        Assert.Contains("Server log:", exception.Message);
+        Assert.Contains("System.InvalidOperationException: The throw button was clicked.", exception.Message);
+        await page.Context.CloseAsync();
+    }
+
     [Fact]
     public async Task WaitForBlazorIdleAsync_ShouldThrowNotSupported_WhenTrackingIsNotInstalled()
     {
-        var page = await browsers.NewUntrackedPageAsync("chromium", app.BaseUrl);
+        var page = await browsers.NewUntrackedPageAsync("chromium", app);
         await page.GotoAsync("/server/counter");
 
         var exception = await Assert.ThrowsAsync<NotSupportedException>(() => page.WaitForBlazorIdleAsync());

@@ -30,6 +30,7 @@ public static class BlazorLocatorExtensions
             await Task.Delay(20);
         }
 
-        throw new BlazorTimeoutException($"{locator} had no Blazor event handlers after {Tracker.Seconds(timeout)}.");
+        throw new BlazorTimeoutException(
+            Tracker.WithServerLog(locator.Page, $"{locator} had no Blazor event handlers after {Tracker.Seconds(timeout)}."));
     }
 }

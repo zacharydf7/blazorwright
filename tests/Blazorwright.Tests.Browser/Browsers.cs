@@ -13,16 +13,16 @@ public class Browsers : IAsyncLifetime
 
     public async ValueTask InitializeAsync() => _playwright = await Playwright.CreateAsync();
 
-    public async Task<IPage> NewTrackedPageAsync(string browserName, string baseUrl, BlazorTestOptions? options = null)
+    public async Task<IPage> NewTrackedPageAsync(string browserName, TestAppFixture app, BlazorTestOptions? options = null)
     {
-        var context = await NewContextAsync(browserName, baseUrl);
-        await context.AddBlazorTrackingAsync(options);
+        var context = await NewContextAsync(browserName, app.BaseUrl);
+        await context.AddBlazorTrackingAsync(options, app.Log);
         return await context.NewPageAsync();
     }
 
-    public async Task<IPage> NewUntrackedPageAsync(string browserName, string baseUrl)
+    public async Task<IPage> NewUntrackedPageAsync(string browserName, TestAppFixture app)
     {
-        var context = await NewContextAsync(browserName, baseUrl);
+        var context = await NewContextAsync(browserName, app.BaseUrl);
         return await context.NewPageAsync();
     }
 

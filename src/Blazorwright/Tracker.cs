@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using Microsoft.Playwright;
 
 namespace Blazorwright;
@@ -24,17 +25,33 @@ internal static class Tracker
         }
         """;
 
-    private static readonly ConditionalWeakTable<IBrowserContext, BlazorTestOptions> ContextOptions = new();
+    private static readonly ConditionalWeakTable<IBrowserContext, Registration> Registrations = new();
 
     public static string Script { get; } = ReadScript();
 
-    public static void Register(IBrowserContext context, BlazorTestOptions options) => ContextOptions.AddOrUpdate(context, options);
+    public static void Register(IBrowserContext context, BlazorTestOptions options, ServerLog? serverLog) =>
+        Registrations.AddOrUpdate(context, new Registration(options, serverLog, serverLog?.Position ?? 0));
 
-    public static BlazorTestOptions OptionsFor(IPage page, BlazorTestOptions? options) =>
-        options ?? (ContextOptions.TryGetValue(page.Context, out var registered) ? registered : BlazorTestOptions.Default);
+    public static BlazorTestOptions OptionsFor(IPage page, BlazorTestOptions? options) => options
+        ?? (Registrations.TryGetValue(page.Context, out var registration) ? registration.Options : BlazorTestOptions.Default);
 
-    public static NotSupportedException NotInstalled() =>
-        new("Blazor tracking isn't installed on this page. Call AddBlazorTrackingAsync on its browser context before opening the page.");
+    // Appends the warnings and errors the server logged since the page's context was registered.
+    public static string WithServerLog(IPage page, string message)
+    {
+        if (!Registrations.TryGetValue(page.Context, out var registration) || registration.ServerLog is null)
+        {
+            return message;
+        }
+
+        var lines = registration.ServerLog.Since(registration.LogPosition)
+            .Where(entry => entry.Level >= LogLevel.Warning)
+            .Select(entry => entry.ToString())
+            .ToList();
+        return lines.Count > 0 ? string.Join(Environment.NewLine, [message, "", "Server log:", .. lines]) : message;
+    }
+
+    public static NotSupportedException NotInstalled() => new("Blazor tracking isn't installed on this page. "
+        + "Call AddBlazorTrackingAsync on its browser context before opening the page.");
 
     public static string Seconds(TimeSpan time) => $"{time.TotalSeconds:0.###} s";
 
@@ -45,13 +62,13 @@ internal static class Tracker
         if (snapshot.Status == "failed")
         {
             throw new BlazorCircuitException(snapshot.FailureFlag,
-                $"The app failed while waiting for it to be {wait}: {snapshot.Failure}");
+                WithServerLog(page, $"The app failed while waiting for it to be {wait}: {snapshot.Failure}"));
         }
 
         if (snapshot.Status == "timeout")
         {
             var busy = wait == Idle ? snapshot.DescribeBusy() : snapshot.DescribeNotInteractive();
-            throw new BlazorTimeoutException($"Not {wait} after {Seconds(resolved.Timeout)}: {busy}.");
+            throw new BlazorTimeoutException(WithServerLog(page, $"Not {wait} after {Seconds(resolved.Timeout)}: {busy}."));
         }
     }
 
@@ -90,6 +107,8 @@ internal static class Tracker
 
         return kinds;
     }
+
+    private sealed record Registration(BlazorTestOptions Options, ServerLog? ServerLog, int LogPosition);
 
     private static string ReadScript()
     {
