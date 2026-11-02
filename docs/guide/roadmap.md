@@ -8,10 +8,8 @@ The first stable release aims at one promise: a test that waits for idle sees th
 mode, without sleeps or retries. The work toward it is tracked in
 [GitHub issues](https://github.com/zacharydf7/blazorwright/issues), and falls into four groups:
 
-- **Correctness of idle.** Park a call only for modal dialogs, so a popover doesn't end a wait early
-  ([#18](https://github.com/zacharydf7/blazorwright/issues/18)), and close or document the window in which idle can
-  return before a JavaScript call made from `OnAfterRenderAsync` starts
-  ([#21](https://github.com/zacharydf7/blazorwright/issues/21)).
+- **Correctness of idle.** Close or document the window in which idle can return before a JavaScript call made from
+  `OnAfterRenderAsync` starts ([#21](https://github.com/zacharydf7/blazorwright/issues/21)).
 - **Coverage.** Optionally count elements marked `aria-busy="true"` as busy
   ([#19](https://github.com/zacharydf7/blazorwright/issues/19)).
 - **Diagnostics.** Name what kept the page from going quiet when idle times out

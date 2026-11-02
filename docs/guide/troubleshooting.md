@@ -13,7 +13,7 @@ An event handler hasn't returned. Either it's slower than the timeout, or it's w
 
 - If the work is just slow, such as a report or a file upload, raise the [timeout](options.md) for that test class.
 - If it awaits something from the user, such as a dialog that Blazorwright doesn't recognize, give the dialog
-  `role="dialog"` or `aria-modal="true"`. See [Dialogs](dialogs.md).
+  `aria-modal="true"`. See [Dialogs](dialogs.md#popovers-and-unmarked-dialogs).
 - Check the server log lines at the end of the message for an exception the handler swallowed and retried.
 
 ## Idle times out with a JavaScript call in flight
@@ -63,7 +63,6 @@ A wait returned before the change it was meant to cover. Possible causes:
 - The test didn't wait after the action. Add `WaitForBlazorIdleAsync()` after it.
 - The change comes from work nothing awaits, such as `_ = LoadAsync();`. Wait for the result with a Playwright
   assertion; see [the waits](waits.md#waiting-for-something-specific).
-- The handler opened a popover with `role="dialog"` and kept working. See [Dialogs](dialogs.md#popovers).
 
 ## The wait fails with `BlazorCircuitException` straight away
 

@@ -24,8 +24,9 @@ assertion such as `Expect(locator).ToHaveTextAsync(...)`.
 **A JavaScript call that never settles.** A call from .NET to JavaScript counts until its promise settles. One that
 never settles keeps idle busy until the wait times out, and the message names the call.
 
-**Popovers with `role="dialog"`.** A non-modal popover that sets `role="dialog"` stops the handler that opened it from
-counting while it is open, like a real dialog does. See [Dialogs](dialogs.md#popovers).
+**Modal dialogs marked only with `role="dialog"`.** Such a dialog doesn't stop the handler that awaits it from
+counting, so idle times out while it's open. See
+[Dialogs](dialogs.md#popovers-and-unmarked-dialogs).
 
 **WebSockets only.** Blazor Server must use WebSockets, its default transport. If a proxy or a setting forces
 long polling or Server-Sent Events, render batches can't be counted.

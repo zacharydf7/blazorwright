@@ -12,7 +12,10 @@ public sealed record BlazorTestOptions
     /// </summary>
     public TimeSpan Timeout { get; init; } = TimeSpan.FromSeconds(30);
 
-    /// <summary>How long nothing may change before the app counts as idle. It covers work no handler awaits.</summary>
+    /// <summary>
+    /// How long the page must go without DOM changes or Blazor activity before the app counts as idle. It covers work no
+    /// handler awaits.
+    /// </summary>
     public TimeSpan QuietPeriod { get; init; } = TimeSpan.FromMilliseconds(100);
 
     /// <summary>Failures that end a wait with <see cref="BlazorCircuitException"/> instead of letting it time out.</summary>

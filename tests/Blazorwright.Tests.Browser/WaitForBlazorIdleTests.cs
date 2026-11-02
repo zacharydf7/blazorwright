@@ -66,6 +66,43 @@ public class WaitForBlazorIdleTests(Browsers browsers, TestAppFixture app) : ICl
     [InlineData("firefox", "server")]
     [InlineData("chromium", "wasm")]
     [InlineData("firefox", "wasm")]
+    public async Task WaitForBlazorIdleAsync_ShouldReturnWhileDialogIsOpen_WhenHandlerAwaitsNativeModalDialog(string browser,
+        string mode)
+    {
+        var page = await browsers.NewTrackedPageAsync(browser, app);
+        await page.GotoBlazorAsync($"/{mode}/confirm");
+        await page.GetByRole(AriaRole.Button, new() { Name = "Delete" }).ClickAsync();
+        await page.WaitForBlazorIdleAsync();
+
+        await page.GetByRole(AriaRole.Button, new() { Name = "Yes" }).ClickAsync();
+        await page.WaitForBlazorIdleAsync();
+
+        Assert.Equal("Deleted", await page.GetByRole(AriaRole.Status).TextContentAsync());
+        await page.Context.CloseAsync();
+    }
+
+    [Theory]
+    [InlineData("chromium", "server")]
+    [InlineData("firefox", "server")]
+    [InlineData("chromium", "wasm")]
+    [InlineData("firefox", "wasm")]
+    public async Task WaitForBlazorIdleAsync_ShouldWaitForHandler_WhenItOpensNonModalPopover(string browser, string mode)
+    {
+        var page = await browsers.NewTrackedPageAsync(browser, app);
+        await page.GotoBlazorAsync($"/{mode}/filters");
+
+        await page.GetByRole(AriaRole.Button, new() { Name = "Filters" }).ClickAsync();
+        await page.WaitForBlazorIdleAsync();
+
+        Assert.Equal("Loaded", await page.GetByRole(AriaRole.Status).TextContentAsync());
+        await page.Context.CloseAsync();
+    }
+
+    [Theory]
+    [InlineData("chromium", "server")]
+    [InlineData("firefox", "server")]
+    [InlineData("chromium", "wasm")]
+    [InlineData("firefox", "wasm")]
     public async Task WaitForBlazorIdleAsync_ShouldWaitForJSCall_WhenFireAndForgetWorkAwaitsIt(string browser, string mode)
     {
         var page = await browsers.NewTrackedPageAsync(browser, app);

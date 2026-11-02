@@ -36,10 +36,10 @@ await Expect(Page.GetByText("report-final.pdf")).ToBeVisibleAsync();
 A dialog is any visible element that matches one of these:
 
 - `aria-modal="true"`
-- `role="dialog"` or `role="alertdialog"`
+- `role="alertdialog"`
 - a `<dialog>` opened with `showModal()`
 
-Most component libraries mark their dialogs this way already, because screen readers need it too.
+Most component libraries mark their modal dialogs this way already, because screen readers need it too.
 
 ## A timeout that names a parked call
 
@@ -52,9 +52,12 @@ last activity 29870 ms ago.
 
 A parked call doesn't keep the app busy, so it isn't the cause of the timeout; look at the other parts of the message.
 
-## Popovers
+## Popovers and unmarked dialogs
 
-A non-modal popover that sets `role="dialog"`, such as a date picker's panel, parks the call that opened it too. If that
-handler keeps working after the panel shows, idle can return before it finishes. Wait for the result with a Playwright
-assertion in that case. [Issue #18](https://github.com/zacharydf7/blazorwright/issues/18) tracks parking calls only for
-modal dialogs.
+A popover such as a date picker's panel or a filter form often sets `role="dialog"` too, but it doesn't wait for the
+user: the handler that opened it may keep loading while it shows. `role="dialog"` alone doesn't park a call, so idle
+waits for that handler to finish.
+
+The flip side is a modal dialog drawn as a plain `<div role="dialog">` without `aria-modal="true"`. Blazorwright can't
+tell it from a popover, so a handler that awaits it keeps idle busy until the wait times out, and the message names the
+call. Add `aria-modal="true"` to the dialog; screen readers need it to treat the dialog as modal anyway.

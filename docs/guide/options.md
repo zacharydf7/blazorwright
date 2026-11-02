@@ -5,7 +5,7 @@
 | Setting | Default | Meaning |
 | --- | --- | --- |
 | `Timeout` | 30 s | How long a wait may take before it throws `BlazorTimeoutException`. |
-| `QuietPeriod` | 100 ms | How long the DOM must stay unchanged before the app counts as idle. It covers work no handler awaits. |
+| `QuietPeriod` | 100 ms | How long the page must go without DOM changes or Blazor activity before the app counts as idle. It covers work no handler awaits. |
 | `FailOn` | `UnhandledException \| Disconnected` | Failures that end a wait with `BlazorCircuitException` instead of letting it time out. |
 
 The timeout matches Playwright's default, but it's separate: `SetDefaultTimeout` doesn't change it.

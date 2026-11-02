@@ -38,7 +38,8 @@
 
     // .NET call hook: every DOM event and [JSInvokable] call goes through invokeMethodAsync.
 
-    const modalSelector = '[aria-modal="true"], [role="dialog"], [role="alertdialog"], dialog:modal';
+    // Only modal dialogs wait for the user: a popover with role="dialog" opens while its handler keeps working.
+    const modalSelector = '[aria-modal="true"], [role="alertdialog"], dialog:modal';
 
     function openModals() {
         return [...document.querySelectorAll(modalSelector)].filter(element => element.checkVisibility());

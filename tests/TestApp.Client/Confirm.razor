@@ -1,0 +1,29 @@
+@inject IJSRuntime JS
+
+<button @onclick="DeleteAsync">Delete</button>
+<p role="status">@_status</p>
+<dialog @ref="_dialog" aria-label="Confirm">
+    <button @onclick="() => Answer(true)">Yes</button>
+    <button @onclick="() => Answer(false)">No</button>
+</dialog>
+
+@code {
+    private ElementReference _dialog;
+    private TaskCompletionSource<bool>? _answer;
+    private string _status = "Idle";
+
+    // Opens a native modal <dialog> and awaits the answer inside the click handler, then deletes.
+    private async Task DeleteAsync()
+    {
+        _answer = new TaskCompletionSource<bool>();
+        await JS.InvokeVoidAsync("spikeInterop.showModal", _dialog);
+        var confirmed = await _answer.Task;
+        await JS.InvokeVoidAsync("spikeInterop.close", _dialog);
+        _status = "Deleting";
+        StateHasChanged();
+        await Task.Delay(300);
+        _status = confirmed ? "Deleted" : "Kept";
+    }
+
+    private void Answer(bool confirmed) => _answer?.TrySetResult(confirmed);
+}

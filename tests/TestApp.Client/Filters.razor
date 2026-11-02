@@ -1,0 +1,21 @@
+@inject IJSRuntime JS
+
+<button @onclick="OpenAsync">Filters</button>
+<p role="status">@_status</p>
+<div @ref="_panel" popover="manual" role="dialog" aria-label="Filters">
+    <label><input type="checkbox" /> In stock</label>
+</div>
+
+@code {
+    private ElementReference _panel;
+    private string _status = "Closed";
+
+    // Shows a non-modal popover marked with role="dialog", as component libraries often do, and keeps loading.
+    private async Task OpenAsync()
+    {
+        _status = "Loading";
+        await JS.InvokeVoidAsync("spikeInterop.showPopover", _panel);
+        await Task.Delay(300);
+        _status = "Loaded";
+    }
+}

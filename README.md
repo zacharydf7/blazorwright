@@ -76,7 +76,8 @@ public class CounterTests(AppFixture app) : BlazorPageTest(app)
 
 Idle also waits for calls from .NET to JavaScript and for enhanced navigation. A handler that opens a dialog and awaits
 its result (`await dialog.Result`) doesn't block idle while the dialog is open; it counts again once the dialog closes.
-A dialog is any visible element with `aria-modal="true"`, `role="dialog"` or `role="alertdialog"`, or a modal `<dialog>`.
+A dialog is any visible element with `aria-modal="true"` or `role="alertdialog"`, or a `<dialog>` opened with
+`showModal()`. A popover with `role="dialog"` alone isn't modal, so the handler that opened it keeps counting.
 
 ## Options
 
@@ -128,10 +129,11 @@ await context.AddBlazorTrackingAsync(options, app.Log);
   quiet period (100 ms by default) covers short work like that; for longer work, wait for its result with Playwright's
   `Expect`.
 - **A JavaScript call that never settles** keeps idle busy until it times out, and the message names the call.
-- **A non-modal popover with `role="dialog"`** stops its handler from counting while it is open, like a dialog does.
+- **A modal dialog marked only with `role="dialog"`** doesn't stop its handler from counting, so idle times out while
+  it's open and the message names the call. Add `aria-modal="true"`.
 - **Blazor Server needs WebSockets**, the default transport.
-- **Checks for passing states.** After a wait, a short-lived state such as a loading message may already be gone, so a
-  test that expects to see it can time out. Check the state the app ends in instead.
+- **Checks for short-lived states.** After a wait, a state such as a loading message may already be gone, so a test
+  that expects to see it can time out. Check the state the app ends in instead.
 
 ## Support
 

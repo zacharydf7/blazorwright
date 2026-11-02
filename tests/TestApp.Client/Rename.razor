@@ -2,7 +2,7 @@
 <p role="status">@_status</p>
 @if (_dialog is not null)
 {
-    <div role="dialog" aria-label="Rename">
+    <div role="dialog" aria-modal="true" aria-label="Rename">
         <input aria-label="Name" @bind="_name" />
         <button @onclick="() => Close(_name)">Save</button>
         <button @onclick="() => Close(null)">Cancel</button>

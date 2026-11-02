@@ -40,7 +40,8 @@ When the app fails during a wait, the wait stops at once and throws `BlazorCircu
 | `Disconnected` | The circuit's WebSocket closed unexpectedly, or reconnecting failed |
 | `None` | Blazorwright couldn't read a circuit message, so its counts can't be trusted |
 
-[`FailOn`](options.md) chooses which app failures stop a wait. The last kind always stops it.
+[`FailOn`](options.md) chooses which app failures stop a wait. An unreadable circuit message (`None`) always stops it,
+whatever `FailOn` says.
 
 ## The server's log
 
