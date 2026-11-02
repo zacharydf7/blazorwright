@@ -1,6 +1,10 @@
-# Blazorwright
+# ![Blazorwright](https://raw.githubusercontent.com/zacharydf7/blazorwright/main/docs/assets/logo.svg)
 
 Deterministic Playwright tests for Blazor apps on .NET 10.
+
+**[Documentation](https://zacharydf7.github.io/blazorwright/)** ·
+[Getting started](https://zacharydf7.github.io/blazorwright/guide/getting-started.html) ·
+[API reference](https://zacharydf7.github.io/blazorwright/api/index.html)
 
 `await Page.WaitForBlazorIdleAsync()` tells a test that the app has finished reacting to what the test just did: no
 event handler still running, no server render still on its way to the browser. It needs no changes to the app under

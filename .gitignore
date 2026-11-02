@@ -483,3 +483,8 @@ $RECYCLE.BIN/
 
 # Local Claude Code notes
 CLAUDE.local.md
+
+# Docs site build output: the site, and the API pages DocFX generates from the source
+docs/_site/
+docs/api/*.yml
+docs/api/.manifest

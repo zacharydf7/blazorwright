@@ -1,0 +1,40 @@
+- name: Get started
+  items:
+  - name: Introduction
+    href: index.md
+  - name: Getting started
+    href: getting-started.md
+  - name: From sleeps to waits
+    href: replacing-sleeps.md
+- name: Writing tests
+  items:
+  - name: The waits
+    href: waits.md
+  - name: Prerendered pages
+    href: prerendering.md
+  - name: Dialogs
+    href: dialogs.md
+- name: Hosting and frameworks
+  items:
+  - name: Hosting the app
+    href: hosting.md
+  - name: Other test frameworks
+    href: other-frameworks.md
+- name: When a test fails
+  items:
+  - name: Failure messages and artifacts
+    href: failures.md
+  - name: Troubleshooting
+    href: troubleshooting.md
+- name: Reference
+  items:
+  - name: Options
+    href: options.md
+  - name: How it works
+    href: how-it-works.md
+  - name: Support and limits
+    href: support.md
+  - name: Roadmap
+    href: roadmap.md
+  - name: API reference
+    href: ../api/index.md

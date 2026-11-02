@@ -1,0 +1,35 @@
+{
+  "$schema": "https://raw.githubusercontent.com/dotnet/docfx/main/schemas/docfx.schema.json",
+  "metadata": [
+    {
+      "src": [
+        {
+          "src": "../src",
+          "files": [ "Blazorwright/Blazorwright.csproj", "Blazorwright.Xunit/Blazorwright.Xunit.csproj" ]
+        }
+      ],
+      "dest": "api"
+    }
+  ],
+  "build": {
+    "content": [
+      { "files": [ "index.md", "toc.yml" ] },
+      { "files": [ "guide/**.md", "guide/toc.yml" ] },
+      { "files": [ "api/**.yml", "api/index.md" ] }
+    ],
+    "resource": [
+      { "files": [ "assets/**" ] }
+    ],
+    "output": "_site",
+    "template": [ "default", "modern", "template" ],
+    "globalMetadata": {
+      "_appName": "Blazorwright",
+      "_appTitle": "Blazorwright",
+      "_appLogoPath": "assets/mark.svg",
+      "_appFaviconPath": "assets/mark.svg",
+      "_appFooter": "<span>Blazorwright is open source under the MIT license. <a href=\"https://github.com/zacharydf7/blazorwright\">GitHub</a> · <a href=\"https://www.nuget.org/packages/Blazorwright\">NuGet</a></span>",
+      "_enableSearch": true,
+      "_gitContribute": { "repo": "https://github.com/zacharydf7/blazorwright", "branch": "main" }
+    }
+  }
+}

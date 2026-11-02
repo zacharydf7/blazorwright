@@ -27,6 +27,8 @@ hosts the app in-process on real Kestrel, and keeps failure artifacts.
 - `src/Blazorwright.Xunit`: `BlazorPageTest`, the xUnit v3 base class that keeps a trace and video for failed tests.
 - `tests/Blazorwright.Tests.Browser`: contract tests that drive `tests/TestApp` on Chromium and Firefox.
 - `spike/`: throwaway code that answered the design spec's feasibility questions.
+- `docs/`: the DocFX documentation site, published to GitHub Pages from `main`. Build it with
+  `dotnet tool restore` and `dotnet docfx docs/docfx.json --warningsAsErrors`; keep the guide in step with the code.
 
 ## Build and test
 
