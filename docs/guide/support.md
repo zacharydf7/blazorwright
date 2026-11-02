@@ -35,5 +35,5 @@ long polling or Server-Sent Events, render batches can't be counted.
 expects to see it can time out. Check the state the app ends in instead.
 
 **Pages that never stop changing.** A clock, an elapsed-time label or an animation driven by the DOM restarts the quiet
-period on every change, so idle never returns on that page. Use `WaitForBlazorInteractiveAsync` there, and Playwright
-assertions for results.
+period on every change, so idle never returns on that page, and the timeout message names the element. Use
+`WaitForBlazorInteractiveAsync` there, and Playwright assertions for results.

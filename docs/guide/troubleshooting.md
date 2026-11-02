@@ -28,13 +28,15 @@ Look at that function in the trace's console log.
 ## Idle times out with nothing busy
 
 ```
-Not idle after 30 s: no calls in flight, 0 render batches pending, last activity 12 ms ago.
+Not idle after 30 s: nothing was busy, but the page never went quiet; in the last second: span#elapsed (text, 20
+times), last activity 12 ms ago.
 ```
 
-Nothing is running, but the page changed 12 ms ago, so it never stayed quiet for the quiet period. Something changes
-the DOM all the time: a clock, a countdown, a progress animation written in JavaScript, or a library that rewrites a
-style on a timer. Open the trace and look at which element keeps changing between snapshots. Then either stop it in
-the test environment, or use `WaitForBlazorInteractiveAsync` and Playwright assertions on that page.
+Nothing is running, but something on the page changes all the time, so it never stays quiet for the quiet period. It
+might be a clock, a countdown, a progress animation written in JavaScript, or a library that rewrites a style on a
+timer. The message names up to three elements that changed most often in the last second, and how: their text, their
+children, or an attribute. Either stop those changes in the test environment, or use `WaitForBlazorInteractiveAsync`
+and Playwright assertions on that page.
 
 ## Idle times out with render batches pending
 

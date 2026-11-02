@@ -105,6 +105,14 @@ Blazorwright.BlazorTimeoutException: Not idle after 60 s: 1 call in flight (Disp
 pending, last activity 59950 ms ago.
 ```
 
+When nothing was busy but the page kept changing, so it never stayed quiet for the quiet period, the message names the
+elements that changed most often in the last second instead:
+
+```
+Not idle after 30 s: nothing was busy, but the page never went quiet; in the last second: span#elapsed (text, 20
+times), last activity 12 ms ago.
+```
+
 If the app fails during a wait (an unhandled exception, Blazor's error UI, or a lost circuit), the wait stops at once
 with `BlazorCircuitException` instead of timing out. When the app runs in the test process, the server's exception is
 in the message.

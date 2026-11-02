@@ -30,7 +30,8 @@ navigation as in progress between them, plus one task after the end, because Bla
 a microtask after it.
 
 **The DOM.** A `MutationObserver` records the time of the last change. Idle needs the page to stay unchanged for the
-quiet period, which covers short work that nothing counts.
+quiet period, which covers short work that nothing counts. The script also keeps a short sample of recent changes, so a
+wait that times out on a page that never goes quiet can name what kept changing.
 
 ## Failures
 

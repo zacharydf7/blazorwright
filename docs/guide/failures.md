@@ -23,6 +23,9 @@ Read it from left to right:
 | `an enhanced navigation in progress` | A navigation that hasn't finished. |
 | `last activity 29950 ms ago` | The last time anything changed. A small number means the page kept changing. |
 
+When nothing was busy and the wait timed out only because the page kept changing, the message names the elements that
+changed most often in the last second instead; see [Troubleshooting](troubleshooting.md#idle-times-out-with-nothing-busy).
+
 Calls are named by how they reach .NET: every event handler as `DispatchEventAsync`, a `[JSInvokable]` instance method
 by its name, a static one as `Assembly.Method`, and a call from .NET to JavaScript as `JS <identifier>`.
 

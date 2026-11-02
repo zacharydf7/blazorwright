@@ -153,6 +153,45 @@ public class WaitForBlazorIdleTests(Browsers browsers, TestAppFixture app) : ICl
     [InlineData("firefox", "server")]
     [InlineData("chromium", "wasm")]
     [InlineData("firefox", "wasm")]
+    public async Task WaitForBlazorIdleAsync_ShouldThrowTimeout_WhenItTimesOutRightAfterThePageLoads(string browser,
+        string mode)
+    {
+        var page = await browsers.NewTrackedPageAsync(browser, app);
+        var pageErrors = new List<string>();
+        page.PageError += (_, error) => pageErrors.Add(error);
+        await page.GotoAsync($"/{mode}/ticking");
+
+        await Assert.ThrowsAsync<BlazorTimeoutException>(
+            () => page.WaitForBlazorIdleAsync(new() { Timeout = TimeSpan.FromMilliseconds(300) }));
+
+        Assert.Empty(pageErrors);
+        await page.Context.CloseAsync();
+    }
+
+    [Theory]
+    [InlineData("chromium", "server")]
+    [InlineData("firefox", "wasm")]
+    public async Task WaitForBlazorIdleAsync_ShouldNameTheMostFrequentChanges_WhenThePageNeverGoesQuiet(string browser,
+        string mode)
+    {
+        var page = await browsers.NewTrackedPageAsync(browser, app);
+        await page.GotoAsync($"/{mode}/ticking");
+        await page.WaitForBlazorInteractiveAsync();
+
+        var exception = await Assert.ThrowsAsync<BlazorTimeoutException>(
+            () => page.WaitForBlazorIdleAsync(new() { Timeout = TimeSpan.FromSeconds(1) }));
+
+        Assert.Matches(@"^Not idle after 1 s: nothing was busy, but the page never went quiet; in the last second: "
+            + @"div\.spinner \(style attribute, \d+ times\), span#elapsed \(text, \d+ times\), "
+            + @"ul\[role=log\] \(children, \d+ times\), last activity \d+ ms ago\.", exception.Message);
+        await page.Context.CloseAsync();
+    }
+
+    [Theory]
+    [InlineData("chromium", "server")]
+    [InlineData("firefox", "server")]
+    [InlineData("chromium", "wasm")]
+    [InlineData("firefox", "wasm")]
     public async Task WaitForBlazorIdleAsync_ShouldThrowCircuitException_WhenHandlerThrows(string browser, string mode)
     {
         var page = await browsers.NewTrackedPageAsync(browser, app);

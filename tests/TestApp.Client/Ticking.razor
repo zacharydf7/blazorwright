@@ -1,0 +1,22 @@
+@inject IJSRuntime JS
+
+<p>Elapsed: <span id="elapsed" @ref="_label">0 ms</span></p>
+<div class="spinner" @ref="_spinner"></div>
+<ul role="log" @ref="_log"></ul>
+<p><b @ref="_note">0</b></p>
+
+@code {
+    private ElementReference _label;
+    private ElementReference _spinner;
+    private ElementReference _log;
+    private ElementReference _note;
+
+    // Scripts change the page at different rates, like a spinner, a clock and a live log, so it never goes quiet.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("spikeInterop.tick", _label, _spinner, _log, _note);
+        }
+    }
+}

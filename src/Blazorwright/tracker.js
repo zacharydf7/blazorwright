@@ -385,6 +385,63 @@
 
     // DOM and failure hooks.
 
+    // The DOM changes of the last second, described as they happen, so a wait that never went quiet can say what kept
+    // changing without holding on to removed nodes.
+    const changeWindowMs = 1000;
+    const reportedChanges = 3;
+    const changes = [];
+
+    function recordChanges(records) {
+        const now = performance.now();
+        for (const record of records) {
+            changes.push({ time: now, ...describeChange(record) });
+        }
+        changes.splice(0, changes.findIndex(change => change.time >= now - changeWindowMs));
+    }
+
+    function describeElement(element) {
+        if (!(element instanceof Element)) {
+            return 'document';
+        }
+        const tag = element.tagName.toLowerCase();
+        if (element.id) {
+            return `${tag}#${element.id}`;
+        }
+        if (element.classList.length > 0) {
+            return `${tag}.${element.classList[0]}`;
+        }
+        const role = element.getAttribute('role');
+        return role ? `${tag}[role=${role}]` : tag;
+    }
+
+    function describeChange(record) {
+        const isText = node => node.nodeType === Node.TEXT_NODE;
+        if (record.type === 'characterData') {
+            return { target: describeElement(record.target.parentElement), kind: 'text' };
+        }
+        if (record.type === 'attributes') {
+            return { target: describeElement(record.target), kind: `${record.attributeName} attribute` };
+        }
+        const nodes = [...record.addedNodes, ...record.removedNodes];
+        return { target: describeElement(record.target), kind: nodes.every(isText) ? 'text' : 'children' };
+    }
+
+    // The elements that changed most often in the last second, most frequent first.
+    function recentChanges() {
+        const since = performance.now() - changeWindowMs;
+        const counts = new Map();
+        for (const { time, target, kind } of changes) {
+            if (time < since) {
+                continue;
+            }
+            const key = `${target} ${kind}`;
+            const entry = counts.get(key) ?? { target, kind, count: 0 };
+            entry.count++;
+            counts.set(key, entry);
+        }
+        return [...counts.values()].sort((a, b) => b.count - a.count).slice(0, reportedChanges);
+    }
+
     new MutationObserver(records => {
         for (const record of records) {
             record.addedNodes.forEach(recordMarkers);
@@ -394,6 +451,7 @@
             fail('unhandledException', 'Blazor showed its error UI.');
         }
         touch();
+        recordChanges(records);
     }).observe(document, { subtree: true, childList: true, attributes: true, characterData: true });
 
     document.addEventListener('components-reconnect-state-changed', event => {
@@ -435,6 +493,7 @@
             pendingRootComponents: pendingRootComponents(),
             navigating: state.navigating,
             msSinceActivity: now - state.lastActivity,
+            recentChanges: status === 'timeout' && !isBusy() ? recentChanges() : [],
             elapsedMs: startedAt === undefined ? 0 : now - startedAt,
             failure: failure?.message ?? null,
             failureKind: failure?.kind ?? null,

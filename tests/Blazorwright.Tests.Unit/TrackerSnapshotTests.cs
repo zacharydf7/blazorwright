@@ -32,6 +32,20 @@ public class TrackerSnapshotTests
     }
 
     [Fact]
+    public void DescribeBusy_ShouldNameWhatKeptChanging_WhenNothingIsBusy()
+    {
+        var snapshot = Snapshot() with
+        {
+            RecentChanges = [new("span#elapsed", "text", 20), new("div.spinner", "style attribute", 1)],
+        };
+
+        var description = snapshot.DescribeBusy();
+
+        Assert.Equal("nothing was busy, but the page never went quiet; in the last second: span#elapsed (text, 20 times), "
+            + "div.spinner (style attribute, once), last activity 40 ms ago", description);
+    }
+
+    [Fact]
     public void DescribeNotInteractive_ShouldListOnlyWhatBlocksInteractivity_WhenRootComponentsAreAttaching()
     {
         var snapshot = Snapshot() with
@@ -57,5 +71,5 @@ public class TrackerSnapshotTests
     }
 
     private static TrackerSnapshot Snapshot() =>
-        new("timeout", [], [], 0, [], false, 40, null, null);
+        new("timeout", [], [], 0, [], false, 40, null, null, []);
 }

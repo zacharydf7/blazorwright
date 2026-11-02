@@ -12,9 +12,8 @@ mode, without sleeps or retries. The work toward it is tracked in
   `OnAfterRenderAsync` starts ([#21](https://github.com/zacharydf7/blazorwright/issues/21)).
 - **Coverage.** Optionally count elements marked `aria-busy="true"` as busy
   ([#19](https://github.com/zacharydf7/blazorwright/issues/19)).
-- **Diagnostics.** Name what kept the page from going quiet when idle times out
-  ([#20](https://github.com/zacharydf7/blazorwright/issues/20)), and fail clearly when a Server circuit doesn't use
-  WebSockets ([#9](https://github.com/zacharydf7/blazorwright/issues/9)).
+- **Diagnostics.** Fail clearly when a Server circuit doesn't use WebSockets
+  ([#9](https://github.com/zacharydf7/blazorwright/issues/9)).
 - **Confidence.** Run the browser tests against each supported Blazor version
   ([#10](https://github.com/zacharydf7/blazorwright/issues/10)) and on WebKit
   ([#11](https://github.com/zacharydf7/blazorwright/issues/11)), and test apps hosted out of process
