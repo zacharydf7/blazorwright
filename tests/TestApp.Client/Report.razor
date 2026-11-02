@@ -1,0 +1,35 @@
+<button @onclick="Load">Load report</button>
+<button @onclick="ShowSkeleton">Show skeleton</button>
+<section aria-busy="@(_loading ? "true" : "false")" aria-label="Report">
+    <p role="status">@_status</p>
+</section>
+<div class="spinner" aria-busy="true" style="visibility: hidden"></div>
+@if (_skeleton)
+{
+    <div class="skeleton" aria-busy="true" aria-label="Loading orders"></div>
+}
+
+@code {
+    private bool _loading;
+    private bool _skeleton;
+    private string _status = "Empty";
+
+    // Fire-and-forget, like a grid that marks itself aria-busy while its rows load.
+    private void Load()
+    {
+        _loading = true;
+        _status = "Loading";
+        _ = LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        await Task.Delay(1000);
+        _loading = false;
+        _status = "Loaded";
+        await InvokeAsync(StateHasChanged);
+    }
+
+    // A placeholder left busy on purpose, so idle never returns while aria-busy counts.
+    private void ShowSkeleton() => _skeleton = true;
+}

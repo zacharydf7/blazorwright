@@ -18,6 +18,13 @@ public sealed record BlazorTestOptions
     /// </summary>
     public TimeSpan QuietPeriod { get; init; } = TimeSpan.FromMilliseconds(100);
 
+    /// <summary>
+    /// Whether idle also waits for every visible element marked <c>aria-busy="true"</c>, such as a grid loading its rows.
+    /// It covers work no handler awaits, as long as the app marks it. Off by default, because a spinner or skeleton left
+    /// busy on purpose would keep idle busy until the wait times out.
+    /// </summary>
+    public bool WaitForAriaBusy { get; init; }
+
     /// <summary>Failures that end a wait with <see cref="BlazorCircuitException"/> instead of letting it time out.</summary>
     public CircuitFailure FailOn { get; init; } = CircuitFailure.UnhandledException | CircuitFailure.Disconnected;
 }

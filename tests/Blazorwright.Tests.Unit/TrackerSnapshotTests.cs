@@ -32,6 +32,17 @@ public class TrackerSnapshotTests
     }
 
     [Fact]
+    public void DescribeBusy_ShouldNameEachElementOnce_WhenElementsAreMarkedAriaBusy()
+    {
+        var snapshot = Snapshot() with { AriaBusyElements = ["table#orders", "div.skeleton", "div.skeleton"] };
+
+        var description = snapshot.DescribeBusy();
+
+        Assert.Equal("no calls in flight, 0 render batches pending, "
+            + "3 elements marked aria-busy (table#orders, div.skeleton x2), last activity 40 ms ago", description);
+    }
+
+    [Fact]
     public void DescribeBusy_ShouldNameWhatKeptChanging_WhenNothingIsBusy()
     {
         var snapshot = Snapshot() with
@@ -71,5 +82,5 @@ public class TrackerSnapshotTests
     }
 
     private static TrackerSnapshot Snapshot() =>
-        new("timeout", [], [], 0, [], false, 40, null, null, []);
+        new("timeout", [], [], 0, [], false, 40, null, null, [], []);
 }

@@ -21,6 +21,7 @@ Read it from left to right:
 | `2 render batches pending` | The server sent renders the browser hasn't applied. |
 | `root components still attaching (...)` | Interactive components that haven't been attached yet. |
 | `an enhanced navigation in progress` | A navigation that hasn't finished. |
+| `1 element marked aria-busy (...)` | With [`WaitForAriaBusy`](options.md#waiting-for-aria-busy) on, visible elements still marked `aria-busy="true"`. |
 | `last activity 29950 ms ago` | The last time anything changed. A small number means the page kept changing. |
 
 When nothing was busy and the wait timed out only because the page kept changing, the message names the elements that

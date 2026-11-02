@@ -18,8 +18,9 @@ against the Blazor version it supports. See [How it works](how-it-works.md#depen
 ## Limits
 
 **Work nothing awaits.** A handler that starts work and returns (`_ = LoadAsync();`) leaves nothing to count. The
-quiet period, 100 ms by default, covers short work like that. For longer work, wait for its result with a Playwright
-assertion such as `Expect(locator).ToHaveTextAsync(...)`.
+quiet period, 100 ms by default, covers short work like that. For longer work, turn on
+[`WaitForAriaBusy`](options.md#waiting-for-aria-busy) if the component marks it with `aria-busy="true"`, or wait for its
+result with a Playwright assertion such as `Expect(locator).ToHaveTextAsync(...)`.
 
 **A JavaScript call that never settles.** A call from .NET to JavaScript counts until its promise settles. One that
 never settles keeps idle busy until the wait times out, and the message names the call.

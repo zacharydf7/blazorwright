@@ -95,6 +95,10 @@ protected override BlazorTestOptions Options => new()
 protected override FailureArtifacts Artifacts => FailureArtifacts.Trace | FailureArtifacts.Video;
 ```
 
+Set `WaitForAriaBusy = true` to make idle also wait for visible elements marked `aria-busy="true"`, which many grids,
+buttons and skeletons set while they load. It's off by default, because a spinner or skeleton left busy on purpose would
+keep idle busy until the wait times out; the message then names the element.
+
 ## When a wait fails
 
 A wait that runs out of time says what was still running, and adds the warnings and errors the server logged since the
@@ -134,8 +138,8 @@ await context.AddBlazorTrackingAsync(options, app.Log);
 ## Limits
 
 - **Work nothing awaits.** A handler that starts work and returns (`_ = LoadAsync();`) leaves nothing to count. The
-  quiet period (100 ms by default) covers short work like that; for longer work, wait for its result with Playwright's
-  `Expect`.
+  quiet period (100 ms by default) covers short work like that. For longer work, turn on `WaitForAriaBusy` if the
+  component marks it with `aria-busy="true"`, or wait for its result with Playwright's `Expect`.
 - **A JavaScript call that never settles** keeps idle busy until it times out, and the message names the call.
 - **A modal dialog marked only with `role="dialog"`** doesn't stop its handler from counting, so idle times out while
   it's open and the message names the call. Add `aria-modal="true"`.

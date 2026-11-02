@@ -3,7 +3,7 @@ namespace Blazorwright;
 // What the tracker script reports when a wait ends: its status ("ready", "timeout" or "failed") and what was still busy.
 internal sealed record TrackerSnapshot(string Status, Dictionary<string, int> DotNetCalls, Dictionary<string, int> ParkedCalls,
     int PendingBatches, string[] PendingRootComponents, bool Navigating, double MsSinceActivity, string? Failure,
-    string? FailureKind, RecentChange[] RecentChanges)
+    string? FailureKind, string[] AriaBusyElements, RecentChange[] RecentChanges)
 {
     public CircuitFailure FailureFlag => Tracker.FailureFlag(FailureKind);
 
@@ -14,6 +14,7 @@ internal sealed record TrackerSnapshot(string Status, Dictionary<string, int> Do
         Batches(),
         RootComponents(),
         Navigation(),
+        AriaBusy(),
         $"last activity {MsSinceActivity:F0} ms ago");
 
     private string DescribeChanges() => Join(
@@ -30,6 +31,19 @@ internal sealed record TrackerSnapshot(string Status, Dictionary<string, int> Do
         : null;
 
     private string? Navigation() => Navigating ? "an enhanced navigation in progress" : null;
+
+    // Repeats are grouped, so a skeleton list of 50 rows reads "div.skeleton x50".
+    private string? AriaBusy()
+    {
+        var names = string.Join(", ", AriaBusyElements.CountBy(name => name)
+            .Select(group => group.Value == 1 ? group.Key : $"{group.Key} x{group.Value}"));
+        return AriaBusyElements.Length switch
+        {
+            0 => null,
+            1 => $"1 element marked aria-busy ({names})",
+            _ => $"{AriaBusyElements.Length} elements marked aria-busy ({names})",
+        };
+    }
 
     private static string Calls(Dictionary<string, int> calls, string state)
     {

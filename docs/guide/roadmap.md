@@ -6,12 +6,10 @@ Blazorwright is working toward its first release. The packages aren't on NuGet y
 
 The first stable release aims at one promise: a test that waits for idle sees the app's final state, on every render
 mode, without sleeps or retries. The work toward it is tracked in
-[GitHub issues](https://github.com/zacharydf7/blazorwright/issues), and falls into four groups:
+[GitHub issues](https://github.com/zacharydf7/blazorwright/issues), and falls into three groups:
 
 - **Correctness of idle.** Close or document the window in which idle can return before a JavaScript call made from
   `OnAfterRenderAsync` starts ([#21](https://github.com/zacharydf7/blazorwright/issues/21)).
-- **Coverage.** Optionally count elements marked `aria-busy="true"` as busy
-  ([#19](https://github.com/zacharydf7/blazorwright/issues/19)).
 - **Diagnostics.** Fail clearly when a Server circuit doesn't use WebSockets
   ([#9](https://github.com/zacharydf7/blazorwright/issues/9)).
 - **Confidence.** Run the browser tests against each supported Blazor version

@@ -89,6 +89,9 @@ retry until they pass:
 await Expect(Page.GetByRole(AriaRole.Status)).ToHaveTextAsync("Import finished");
 ```
 
+If the component marks that work with `aria-busy="true"`, as many grids, buttons and skeletons do,
+[`WaitForAriaBusy`](options.md#waiting-for-aria-busy) makes idle wait for it too.
+
 Assertions also suit states the app ends in. Don't check for a short-lived state, such as a loading message, after a wait:
 by the time the wait returns, the message may already be gone.
 

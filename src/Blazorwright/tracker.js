@@ -407,6 +407,10 @@
         if (element.id) {
             return `${tag}#${element.id}`;
         }
+        const label = element.getAttribute('aria-label');
+        if (label) {
+            return `${tag}[aria-label="${label}"]`;
+        }
         if (element.classList.length > 0) {
             return `${tag}.${element.classList[0]}`;
         }
@@ -480,7 +484,7 @@
         return pending;
     }
 
-    function snapshot(status, startedAt, failure = state.failures[0]) {
+    function snapshot(status, startedAt, failure = state.failures[0], countAriaBusy = false) {
         const now = performance.now();
         const busy = busyCalls();
         return {
@@ -493,7 +497,8 @@
             pendingRootComponents: pendingRootComponents(),
             navigating: state.navigating,
             msSinceActivity: now - state.lastActivity,
-            recentChanges: status === 'timeout' && !isBusy() ? recentChanges() : [],
+            ariaBusyElements: countAriaBusy ? ariaBusyElements().map(describeElement) : [],
+            recentChanges: status === 'timeout' && !isBusy(countAriaBusy) ? recentChanges() : [],
             elapsedMs: startedAt === undefined ? 0 : now - startedAt,
             failure: failure?.message ?? null,
             failureKind: failure?.kind ?? null,
@@ -511,11 +516,18 @@
         };
     }
 
-    function isBusy() {
+    // Components such as a grid loading its rows set aria-busy="true" for work no handler awaits.
+    function ariaBusyElements() {
+        return [...document.querySelectorAll('[aria-busy="true"]')]
+            .filter(element => element.checkVisibility({ visibilityProperty: true }));
+    }
+
+    function isBusy(countAriaBusy = false) {
         return busyCalls().length > 0
             || state.lastBatchReceived > state.lastBatchCompleted
             || pendingRootComponents().length > 0
-            || state.navigating;
+            || state.navigating
+            || (countAriaBusy && ariaBusyElements().length > 0);
     }
 
     // Resolves once nothing is busy and nothing has changed for quietMs, or on failure or timeout.
@@ -523,14 +535,14 @@
         return state.failures.find(failure => failure.kind === 'tracker' || failOn.includes(failure.kind)) ?? null;
     }
 
-    function waitUntil(isReady, quietMs, timeoutMs, failOn) {
+    function waitUntil(isReady, quietMs, timeoutMs, failOn, countAriaBusy = false) {
         const startedAt = performance.now();
         return new Promise(resolve => {
             let timer;
             const finish = (status, failure) => {
                 clearTimeout(timer);
                 waiters.delete(check);
-                resolve(snapshot(status, startedAt, failure));
+                resolve(snapshot(status, startedAt, failure, countAriaBusy));
             };
             const check = () => {
                 clearTimeout(timer);
@@ -564,7 +576,8 @@
 
     window.__blazorTest = {
         snapshot: () => snapshot('snapshot'),
-        idle: (quietMs, timeoutMs, failOn) => waitUntil(() => !isBusy(), quietMs, timeoutMs, failOn),
+        idle: (quietMs, timeoutMs, failOn, countAriaBusy) =>
+            waitUntil(() => !isBusy(countAriaBusy), quietMs, timeoutMs, failOn, countAriaBusy),
         interactive: (timeoutMs, failOn) => waitUntil(() => !state.navigating && pendingRootComponents().length === 0
             && state.lastBatchReceived === state.lastBatchCompleted, 0, timeoutMs, failOn),
         hasHandlers,

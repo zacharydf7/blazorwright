@@ -13,13 +13,13 @@ internal static class Tracker
     public const string Interactive = "interactive";
 
     private const string WaitScript = """
-        async ([wait, quietMs, timeoutMs, failOn]) => {
+        async ([wait, quietMs, timeoutMs, failOn, countAriaBusy]) => {
             const tracker = window.__blazorTest;
             if (!tracker) {
                 return null;
             }
             const snapshot = wait === 'idle'
-                ? await tracker.idle(quietMs, timeoutMs, failOn)
+                ? await tracker.idle(quietMs, timeoutMs, failOn, countAriaBusy)
                 : await tracker.interactive(timeoutMs, failOn);
             return JSON.stringify(snapshot);
         }
@@ -92,8 +92,11 @@ internal static class Tracker
             var timeLeft = Math.Max(0, (options.Timeout - clock.Elapsed).TotalMilliseconds);
             try
             {
-                var json = await page.EvaluateAsync<string?>(WaitScript,
-                    new object[] { wait, options.QuietPeriod.TotalMilliseconds, timeLeft, FailureKinds(options.FailOn) });
+                var json = await page.EvaluateAsync<string?>(WaitScript, new object[]
+                {
+                    wait, options.QuietPeriod.TotalMilliseconds, timeLeft, FailureKinds(options.FailOn),
+                    options.WaitForAriaBusy,
+                });
                 return json is null ? null : JsonSerializer.Deserialize<TrackerSnapshot>(json, JsonSerializerOptions.Web);
             }
             catch (PlaywrightException exception) when (exception.Message.Contains("Execution context was destroyed"))

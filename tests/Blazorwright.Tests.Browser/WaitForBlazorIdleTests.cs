@@ -153,6 +153,58 @@ public class WaitForBlazorIdleTests(Browsers browsers, TestAppFixture app) : ICl
     [InlineData("firefox", "server")]
     [InlineData("chromium", "wasm")]
     [InlineData("firefox", "wasm")]
+    public async Task WaitForBlazorIdleAsync_ShouldWaitForAriaBusyElement_WhenWaitForAriaBusyIsOn(string browser,
+        string mode)
+    {
+        var page = await browsers.NewTrackedPageAsync(browser, app);
+        await page.GotoBlazorAsync($"/{mode}/report");
+
+        await page.GetByRole(AriaRole.Button, new() { Name = "Load report" }).ClickAsync();
+        await page.WaitForBlazorIdleAsync(new() { WaitForAriaBusy = true });
+
+        Assert.Equal("Loaded", await page.GetByRole(AriaRole.Status).TextContentAsync());
+        await page.Context.CloseAsync();
+    }
+
+    [Theory]
+    [InlineData("chromium", "server")]
+    [InlineData("firefox", "wasm")]
+    public async Task WaitForBlazorIdleAsync_ShouldIgnoreAriaBusy_WhenWaitForAriaBusyIsOff(string browser, string mode)
+    {
+        var page = await browsers.NewTrackedPageAsync(browser, app);
+        await page.GotoBlazorAsync($"/{mode}/report");
+
+        await page.GetByRole(AriaRole.Button, new() { Name = "Load report" }).ClickAsync();
+        await page.WaitForBlazorIdleAsync();
+
+        Assert.Equal("Loading", await page.GetByRole(AriaRole.Status).TextContentAsync());
+        await page.Context.CloseAsync();
+    }
+
+    [Theory]
+    [InlineData("chromium", "server")]
+    [InlineData("firefox", "wasm")]
+    public async Task WaitForBlazorIdleAsync_ShouldThrowNamingTheElement_WhenAnElementStaysAriaBusy(string browser,
+        string mode)
+    {
+        var page = await browsers.NewTrackedPageAsync(browser, app);
+        await page.GotoBlazorAsync($"/{mode}/report");
+        await page.GetByRole(AriaRole.Button, new() { Name = "Show skeleton" }).ClickAsync();
+
+        var exception = await Assert.ThrowsAsync<BlazorTimeoutException>(() =>
+            page.WaitForBlazorIdleAsync(new() { Timeout = TimeSpan.FromSeconds(1), WaitForAriaBusy = true }));
+
+        Assert.Matches(@"^Not idle after 1 s: no calls in flight, 0 render batches pending, "
+            + @"1 element marked aria-busy \(div\[aria-label=""Loading orders""\]\), last activity \d+ ms ago\.",
+            exception.Message);
+        await page.Context.CloseAsync();
+    }
+
+    [Theory]
+    [InlineData("chromium", "server")]
+    [InlineData("firefox", "server")]
+    [InlineData("chromium", "wasm")]
+    [InlineData("firefox", "wasm")]
     public async Task WaitForBlazorIdleAsync_ShouldThrowTimeout_WhenItTimesOutRightAfterThePageLoads(string browser,
         string mode)
     {
